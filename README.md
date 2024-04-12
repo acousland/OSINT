@@ -1,2 +1,2 @@
-# CorporateOSINT
+# OSINT
 Open Source intelligence collection
