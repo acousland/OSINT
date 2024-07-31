@@ -19,15 +19,18 @@ def scan_website(url, current_depth=0, max_depth=1000):
         response.raise_for_status()
     except (requests.RequestException, ValueError):
         return
-    if response.content and response.content.strip():
-        tree = html.fromstring(response.content)
-        a_elements = tree.findall('.//a')
-        hrefs = [a.get('href') for a in a_elements]
-        for link in hrefs:
-            if is_valid(link):
-                scan_website(urljoin(url, link), current_depth + 1)
-    else:
-        print(f"No content returned from {url}")
+    try:
+        if response.content and response.content.strip():
+            tree = html.fromstring(response.content)
+            a_elements = tree.findall('.//a')
+            hrefs = [a.get('href') for a in a_elements]
+            for link in hrefs:
+                if is_valid(link):
+                    scan_website(urljoin(url, link), current_depth + 1)
+        else:
+            print(f"No content returned from {url}")
+    except:
+        print(f"Failed to parse {url}")
 # Check if a URL is valid
 def is_valid(url):
     parsed = urlparse(url)
