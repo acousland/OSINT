@@ -20,4 +20,4 @@ if st.button('Run Scrape'):
 
 # Assuming PDFs are saved in a directory called 'pdfs'
 pdf_directory = os.path.abspath('downloads')
-st.write(f"PDFs have been saved to: {pdf_directory}")
+st.write(f"PDFs are being saved to: {pdf_directory}")
