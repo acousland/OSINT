@@ -1,22 +1,77 @@
-# OSINT Web Scraper & PDF Downloader
+# OSINT Toolkit
 
-A comprehensive Open Source Intelligence (OSINT) tool for website mapping, URL discovery, and automated PDF generation/downloading. This application provides both command-line and web interface options for crawling websites and extracting information.
+A comprehensive Open Source Intelligence (OSINT) platform combining high-speed website mapping, content scraping, and AI-powered company dossier generation in a unified interface.
 
-## Features
+## 🚀 Quick Start
 
-- **Website Mapping**: Recursively crawl websites to discover all internal links
-- **PDF Generation**: Convert web pages to PDF format for offline analysis
-- **PDF Download**: Automatically download existing PDF files from discovered URLs
-- **Streamlit Web UI**: User-friendly web interface for easy operation
-- **Concurrent Processing**: Multi-threaded PDF downloading for improved performance
-- **Organized Output**: Automatic folder structure creation based on domain names
+### Unified Application (Recommended)
+```bash
+./run.sh
+```
+This launches the main OSINT Toolkit with all tools integrated in one interface.
 
-## Installation
+### Individual Tools
+```bash
+./run.sh legacy      # Original mapping/scraping interface
+./run.sh dossier     # Standalone dossier generator
+```
+
+## 🛠️ Core Features
+
+### 🗺️ High-Speed Website Mapping
+- **🚀 Concurrent Processing**: 50-100 concurrent requests for maximum speed
+- **⚡ Speed Modes**: Respectful (30 req/s), Fast (50 req/s), Turbo (100 req/s)
+- **📊 Performance Metrics**: Real-time speed monitoring and statistics
+- **🎯 Smart Discovery**: Recursive crawling to find all internal links and resources
+- **📄 Resource Identification**: Automatic detection of PDF files and documents
+- **⚙️ Configurable Depth**: Control crawling scope and thoroughness
+- **🤖 Respectful Crawling**: Honor robots.txt and implement rate limiting
+
+### 📄 High-Speed Content Scraping & Download
+- **🚀 Concurrent Downloads**: 20-50 concurrent requests for maximum speed  
+- **⚡ Speed Modes**: Normal (20 req/s), Fast (30 req/s), Turbo (50 req/s)
+- **📊 Performance Metrics**: Real-time download speed and success tracking
+- **📄 Multi-format Support**: HTML pages, PDF documents, and metadata
+- **💾 Smart Organization**: Automatic folder structure by domain and content type
+- **🔍 Content Analysis**: Extract text content and metadata for AI processing
+- **🛡️ Error Handling**: Robust async error management and retry logic
+
+### 📋 AI-Powered Dossier Generation
+- **Hierarchical Analysis**: Process hundreds of PDFs using semantic chunking
+- **Context Management**: Respect AI model token limits with intelligent batching
+- **Comprehensive Reports**: Generate executive summaries, financial highlights, personnel info
+- **Multiple Sources**: Support both scraped PDFs and custom document collections
+- **Export Options**: JSON for data processing, HTML for presentation
+
+## 🎯 Typical OSINT Workflow
+
+1. **🗺️ Map Website** → Discover structure and identify all accessible content
+2. **📄 Scrape Content** → Download HTML pages, PDFs and extract intelligence data  
+3. **📋 Generate Dossier** → Create comprehensive AI-powered analysis report
+
+## 📁 Project Structure
+
+```
+OSINT/
+├── main.py              # 🏠 Unified application entry point
+├── app.py               # 🗺️ Legacy mapping/scraping interface  
+├── dossier_ui.py        # 📋 Standalone dossier generator
+├── dossier_generator.py # 🤖 Core AI dossier generation logic
+├── cli_dossier.py       # 💻 Command-line dossier tool
+├── mapStructure.py      # 🗺️ Website mapping functionality
+├── scrape.py            # 📄 High-speed content scraping functionality
+├── run.sh              # 🚀 Unified launcher script
+├── requirements.txt    # 📦 Python dependencies
+├── .env.example        # ⚙️ Configuration template
+└── dossiers/           # 📊 Generated intelligence reports
+```
+
+## ⚙️ Installation & Setup
 
 ### Prerequisites
-
 - Python 3.7+
-- wkhtmltopdf (required for PDF generation)
+- wkhtmltopdf (for PDF generation)
+- AI API key (OpenAI, Anthropic, etc. - for dossier generation)
 
 ### Install wkhtmltopdf
 
@@ -33,31 +88,101 @@ sudo apt-get install wkhtmltopdf
 **Windows:**
 Download from: https://wkhtmltopdf.org/downloads.html
 
-### Python Dependencies
+### Setup Instructions
 
-1. Clone the repository:
+1. **Clone and setup:**
 ```bash
 git clone <repository-url>
 cd OSINT
+chmod +x run.sh
 ```
 
-2. Install required packages:
+2. **Automatic setup (recommended):**
 ```bash
+./run.sh  # Creates venv and installs all dependencies automatically
+```
+
+3. **Manual setup (alternative):**
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Usage
-
-### Web Interface (Recommended)
-
-Launch the Streamlit web interface:
-
+4. **Configure AI API (for dossier generation):**
 ```bash
-streamlit run app.py
+cp .env.example .env
+# Edit .env file with your API keys
 ```
 
-This will open a web browser with an intuitive interface where you can:
-- Enter the target URL
+## 💻 Usage Options
+
+### 🏠 Unified Interface (Recommended)
+```bash
+./run.sh
+```
+- Navigate between all tools in one application
+- Integrated workflow from mapping to dossier generation
+- Modern, intuitive interface
+
+### 🗺️ Legacy Tools
+```bash
+./run.sh legacy    # Original mapping/scraping interface
+./run.sh mapping   # Direct to mapping tool
+./run.sh scraping  # Direct to scraping tool
+```
+
+### 📋 Dossier Tools
+```bash
+./run.sh dossier   # Standalone dossier generator UI
+
+# Command-line dossier generation:
+python cli_dossier.py --company-domain www.example.com
+python cli_dossier.py --pdf-directory /path/to/pdfs --company-name "Company Name"
+```
+
+## 📊 Output Structure
+
+### Generated Files
+```
+OSINT/
+├── downloads/           # Scraped content
+│   └── www.company.com/
+│       ├── visited_urls.txt
+│       └── pdfs/        # Downloaded PDF files
+├── dossiers/           # Generated intelligence reports
+│   ├── company_dossier.json
+│   └── company_dossier.html
+└── logs/               # Application logs
+```
+
+### Dossier Report Sections
+- **Executive Summary**: High-level company overview
+- **Business Overview**: Operations, business model, services
+- **Financial Highlights**: Revenue, profits, key financial metrics
+- **Key Personnel**: Leadership team and important contacts
+- **Locations**: Office locations, facilities, geographic presence
+- **Products & Services**: Offerings, solutions, capabilities
+- **Source Attribution**: All analyzed documents tracked
+
+## 🤖 AI-Powered Intelligence Analysis
+
+### Technical Approach
+- **Semantic Chunking**: Documents split into meaningful segments
+- **Vector Embeddings**: Content similarity analysis using sentence transformers
+- **Topic Clustering**: Related content grouped using K-means clustering
+- **Hierarchical Summarization**: Multi-level analysis respecting context windows
+- **Targeted Extraction**: Semantic search for specific information types
+
+### Supported AI Providers
+- OpenAI (GPT-3.5, GPT-4)
+- Anthropic Claude (easily configurable)
+- Other providers via simple API modification
+
+### Context Window Management
+- Intelligent chunking to respect 4K-32K token limits
+- Hierarchical processing: chunks → clusters → summaries → final report
+- Semantic search to find relevant content across hundreds of documents
 - Set the maximum crawling depth
 - Run mapping and scraping operations with visual progress indicators
 - View the location where files are saved
@@ -86,7 +211,11 @@ python OSintel.py
 **Map a website only:**
 ```python
 import mapStructure as ms
-ms.map("https://example.com", max_depth=100)
+
+# High-speed mapping with different modes
+ms.fast_map("https://example.com", max_depth=100)      # Balanced speed (50 concurrent)
+ms.turbo_map("https://example.com", max_depth=100)     # Maximum speed (100 concurrent) 
+ms.map("https://example.com", max_depth=100)           # Custom settings
 ```
 
 **Scrape PDFs only (requires existing mapping):**
@@ -97,22 +226,29 @@ sc.scrape("https://example.com")
 
 ## How It Works
 
-### 1. Website Mapping (`mapStructure.py`)
+### 1. High-Speed Website Mapping (`mapStructure.py`)
 
-- Starts from a given URL and recursively discovers all internal links
-- Respects the specified maximum depth to prevent infinite crawling
-- Uses fake user agents to avoid basic bot detection
-- Saves all discovered URLs to `visited_urls.txt`
-- Only processes internal links (same domain)
+- **🚀 Concurrent Architecture**: Uses async/await with aiohttp for parallel processing
+- **⚡ Speed Modes**: 
+  - `fast_map()`: 30 concurrent requests (balanced)
+  - `turbo_map()`: 100 concurrent requests (aggressive)
+  - `map()`: Custom concurrent settings
+- **📊 Real-time Metrics**: Tracks URLs/second, total time, and progress
+- **🎯 Smart Discovery**: Recursively finds all internal links up to specified depth
+- **🤖 Respectful Crawling**: Configurable delays and user agent rotation
+- **💾 Efficient Storage**: Batch writes for better I/O performance
 
-### 2. PDF Scraping (`scrape.py`)
+### 2. High-Speed Content Scraping (`scrape.py`)
 
-- Reads the list of URLs from the mapping phase
-- For each URL:
-  - If it's already a PDF file: downloads it directly
-  - If it's a web page: converts it to PDF using wkhtmltopdf
-- Uses multi-threading (up to 10 concurrent workers) for faster processing
-- Handles errors gracefully and continues with remaining URLs
+- **🚀 Async Architecture**: Uses aiohttp and asyncio for concurrent processing
+- **📄 Multi-format Support**: Downloads HTML pages, PDF files, and extracts metadata
+- **⚡ Speed Modes**: 
+  - `fast_scrape()`: 30 concurrent requests (recommended)
+  - `turbo_scrape()`: 50 concurrent requests (aggressive)
+  - `scrape()`: Custom concurrent settings
+- **📊 Performance Tracking**: Real-time metrics and download statistics
+- **🛡️ Error Handling**: Robust async error management and retry logic
+- **💾 Smart Organization**: Separate folders for HTML content and PDF files
 
 ### Output Structure
 
@@ -120,10 +256,13 @@ sc.scrape("https://example.com")
 downloads/
 └── domain.com/
     ├── visited_urls.txt    # List of all discovered URLs
-    └── pdfs/              # Generated and downloaded PDFs
-        ├── page1.pdf
+    ├── html_pages/         # Downloaded HTML content
+    │   ├── page1.html
+    │   ├── page1_metadata.json
+    │   └── index.html
+    └── pdfs/              # Direct PDF downloads
         ├── document.pdf
-        └── index.pdf
+        └── report.pdf
 ```
 
 ## Configuration
