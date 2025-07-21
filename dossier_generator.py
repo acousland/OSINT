@@ -24,6 +24,10 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
 
+# HTML processing
+from bs4 import BeautifulSoup
+import lxml
+
 # AI/LLM integration (you can adapt this to your preferred provider)
 import openai  # or any other LLM provider
 
@@ -81,6 +85,56 @@ class DossierGenerator:
             print(f"Error extracting text from {pdf_path}: {e}")
             return ""
     
+    def extract_text_from_html(self, html_path: Path) -> str:
+        """Extract text content from HTML file"""
+        try:
+            with open(html_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+                
+            # Try to use BeautifulSoup if available, otherwise use regex
+            try:
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(content, 'html.parser')
+                
+                # Remove script and style elements
+                for script in soup(["script", "style"]):
+                    script.decompose()
+                    
+                # Get text and clean it
+                text = soup.get_text()
+                
+                # Clean up whitespace
+                lines = (line.strip() for line in text.splitlines())
+                chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+                text = ' '.join(chunk for chunk in chunks if chunk)
+                
+                return text
+                
+            except ImportError:
+                # Fallback: Simple regex-based HTML tag removal
+                import re
+                # Remove HTML tags
+                text = re.sub(r'<[^>]+>', ' ', content)
+                # Clean up whitespace
+                text = ' '.join(text.split())
+                return text
+                
+        except Exception as e:
+            print(f"Error extracting text from {html_path}: {e}")
+            return ""
+    
+    def load_html_metadata(self, html_path: Path) -> Dict[str, Any]:
+        """Load metadata for HTML file if available"""
+        metadata_path = html_path.parent / f"{html_path.stem}_metadata.json"
+        try:
+            if metadata_path.exists():
+                with open(metadata_path, 'r') as f:
+                    return json.load(f)
+            return {}
+        except Exception as e:
+            print(f"Error loading metadata for {html_path}: {e}")
+            return {}
+    
     def chunk_text(self, text: str, source_file: str) -> List[str]:
         """Split text into overlapping chunks"""
         words = text.split()
@@ -99,58 +153,127 @@ class DossierGenerator:
         content_hash = hashlib.md5(content.encode()).hexdigest()[:8]
         return f"{Path(source_file).stem}_{content_hash}"
     
-    def process_pdfs(self, company_domain: str = None, pdf_directory: str = None) -> None:
-        """Process all PDFs for a specific company domain or from a custom directory"""
-        if pdf_directory:
-            # Use custom PDF directory
-            pdf_dir = Path(pdf_directory)
-            company_name = pdf_dir.name  # Use directory name as company identifier
+    def process_documents(self, company_domain: str = None, pdf_directory: str = None, html_directory: str = None) -> None:
+        """Process all documents (PDFs and HTML) for a specific company domain or from custom directories"""
+        if pdf_directory or html_directory:
+            # Use custom directories
+            company_name = Path(pdf_directory or html_directory).name
+            pdf_dir = Path(pdf_directory) if pdf_directory else None
+            html_dir = Path(html_directory) if html_directory else None
         else:
             # Use standard scraped structure
-            company_dir = self.downloads_dir / company_domain / "pdfs"
-            pdf_dir = company_dir
+            company_dir = self.downloads_dir / company_domain
+            pdf_dir = company_dir / "pdfs" if (company_dir / "pdfs").exists() else None
+            html_dir = company_dir / "html_pages" if (company_dir / "html_pages").exists() else None
             company_name = company_domain
         
-        if not pdf_dir.exists():
-            print(f"No PDFs found at {pdf_dir}")
-            return
-            
-        pdf_files = list(pdf_dir.glob("*.pdf"))
-        print(f"Processing {len(pdf_files)} PDF files from {pdf_dir}...")
+        total_files = 0
+        processed_files = 0
         
-        for pdf_file in pdf_files:
-            print(f"Processing: {pdf_file.name}")
+        # Process PDF files
+        if pdf_dir and pdf_dir.exists():
+            pdf_files = list(pdf_dir.glob("*.pdf"))
+            total_files += len(pdf_files)
+            print(f"Processing {len(pdf_files)} PDF files from {pdf_dir}...")
             
-            # Extract text
-            text = self.extract_text_from_pdf(pdf_file)
-            if not text:
-                continue
+            for pdf_file in pdf_files:
+                print(f"Processing PDF: {pdf_file.name}")
                 
-            # Create chunks
-            text_chunks = self.chunk_text(text, str(pdf_file))
-            
-            # Process each chunk
-            for chunk_text in text_chunks:
-                # Create embedding
-                embedding = self.embedding_model.encode(chunk_text)
+                # Extract text
+                text = self.extract_text_from_pdf(pdf_file)
+                if not text:
+                    continue
+                    
+                # Create chunks
+                text_chunks = self.chunk_text(text, str(pdf_file))
                 
-                # Create chunk object
-                chunk = DocumentChunk(
-                    source_file=str(pdf_file),
-                    chunk_id=self.create_chunk_id(chunk_text, str(pdf_file)),
-                    content=chunk_text,
-                    embedding=embedding,
-                    metadata={
-                        "file_name": pdf_file.name,
-                        "company_domain": company_name,
-                        "chunk_length": len(chunk_text),
-                        "processed_at": datetime.now().isoformat()
-                    }
-                )
+                # Process each chunk
+                for chunk_text in text_chunks:
+                    # Create embedding
+                    embedding = self.embedding_model.encode(chunk_text)
+                    
+                    # Create chunk object
+                    chunk = DocumentChunk(
+                        source_file=str(pdf_file),
+                        chunk_id=self.create_chunk_id(chunk_text, str(pdf_file)),
+                        content=chunk_text,
+                        embedding=embedding,
+                        metadata={
+                            "file_name": pdf_file.name,
+                            "company_domain": company_name,
+                            "chunk_length": len(chunk_text),
+                            "file_type": "pdf",
+                            "processed_at": datetime.now().isoformat()
+                        }
+                    )
+                    
+                    self.chunks.append(chunk)
                 
-                self.chunks.append(chunk)
+                processed_files += 1
         
-        print(f"Created {len(self.chunks)} chunks from {len(pdf_files)} PDFs")
+        # Process HTML files
+        if html_dir and html_dir.exists():
+            html_files = list(html_dir.glob("*.html"))
+            total_files += len(html_files)
+            print(f"Processing {len(html_files)} HTML files from {html_dir}...")
+            
+            for html_file in html_files:
+                print(f"Processing HTML: {html_file.name}")
+                
+                # Extract text
+                text = self.extract_text_from_html(html_file)
+                if not text or len(text) < 100:  # Skip very short content
+                    continue
+                    
+                # Load metadata
+                html_metadata = self.load_html_metadata(html_file)
+                
+                # Create chunks
+                text_chunks = self.chunk_text(text, str(html_file))
+                
+                # Process each chunk
+                for chunk_text in text_chunks:
+                    # Create embedding
+                    embedding = self.embedding_model.encode(chunk_text)
+                    
+                    # Create chunk object
+                    chunk = DocumentChunk(
+                        source_file=str(html_file),
+                        chunk_id=self.create_chunk_id(chunk_text, str(html_file)),
+                        content=chunk_text,
+                        embedding=embedding,
+                        metadata={
+                            "file_name": html_file.name,
+                            "company_domain": company_name,
+                            "chunk_length": len(chunk_text),
+                            "file_type": "html",
+                            "url": html_metadata.get("url", ""),
+                            "title": html_metadata.get("title", ""),
+                            "content_type": html_metadata.get("content_type", ""),
+                            "processed_at": datetime.now().isoformat()
+                        }
+                    )
+                    
+                    self.chunks.append(chunk)
+                
+                processed_files += 1
+        
+        print(f"Document processing complete:")
+        print(f"  Total files found: {total_files}")
+        print(f"  Files processed: {processed_files}")
+        print(f"  Chunks created: {len(self.chunks)}")
+        
+        if total_files == 0:
+            print(f"No documents found. Checked directories:")
+            if pdf_dir:
+                print(f"  PDF directory: {pdf_dir}")
+            if html_dir:
+                print(f"  HTML directory: {html_dir}")
+    
+    # Legacy method for backward compatibility
+    def process_pdfs(self, company_domain: str = None, pdf_directory: str = None) -> None:
+        """Legacy method - now calls process_documents for PDFs only"""
+        self.process_documents(company_domain=company_domain, pdf_directory=pdf_directory)
     
     def summarize_document(self, text: str, file_name: str) -> str:
         """Create summary of individual document"""
@@ -233,23 +356,52 @@ class DossierGenerator:
         
         return self._call_llm(prompt, max_tokens=500)
     
-    def generate_company_dossier(self, company_domain: str = None, pdf_directory: str = None, company_name: str = None) -> CompanyDossier:
-        """Generate comprehensive company dossier"""
+    def generate_company_dossier(self, company_domain: str = None, pdf_directory: str = None, 
+                               html_directory: str = None, company_name: str = None) -> CompanyDossier:
+        """Generate comprehensive company dossier from PDFs and HTML content"""
         print("Generating company dossier...")
         
-        # Process PDFs if not already done
+        # Process documents if not already done
         if not self.chunks:
-            self.process_pdfs(company_domain=company_domain, pdf_directory=pdf_directory)
+            self.process_documents(
+                company_domain=company_domain, 
+                pdf_directory=pdf_directory, 
+                html_directory=html_directory
+            )
         
         # Determine company name
         if company_name:
             final_company_name = company_name
         elif pdf_directory:
             final_company_name = Path(pdf_directory).name
+        elif html_directory:
+            final_company_name = Path(html_directory).name
         elif company_domain:
             final_company_name = company_domain.replace("www.", "").replace(".com", "").replace(".au", "")
         else:
             final_company_name = "Unknown Company"
+        
+        if not self.chunks:
+            print("No content found to process. Returning minimal dossier.")
+            return CompanyDossier(
+                company_name=final_company_name,
+                executive_summary="No content available for analysis.",
+                business_overview="No business information found.",
+                financial_highlights="No financial information found.",
+                key_personnel=[],
+                products_services=[],
+                locations=[],
+                recent_developments=[],
+                risk_factors=[],
+                competitive_position="",
+                sources=[],
+                last_updated=datetime.now().isoformat()
+            )
+        
+        # Show content breakdown
+        pdf_chunks = len([c for c in self.chunks if c.metadata.get("file_type") == "pdf"])
+        html_chunks = len([c for c in self.chunks if c.metadata.get("file_type") == "html"])
+        print(f"Content breakdown: {pdf_chunks} PDF chunks, {html_chunks} HTML chunks")
         
         # Cluster chunks by topic
         clusters = self.cluster_chunks_by_topic()

@@ -58,13 +58,27 @@ OPENAI_API_KEY=sk-your-actual-api-key-here
 api_configured = check_api_status()
 
 # Sidebar configuration
-st.sidebar.header("PDF Source Selection")
+st.sidebar.header("⚙️ Configuration")
+
+# Processing parameters
+st.sidebar.markdown("### 📊 Processing Settings")
+chunk_size = st.sidebar.slider("Chunk Size", 500, 2000, 1000, 100)
+chunk_overlap = st.sidebar.slider("Chunk Overlap", 100, 500, 200, 50)
+max_clusters = st.sidebar.slider("Max Topic Clusters", 3, 15, 8, 1)
+
+# Advanced options
+with st.sidebar.expander("Advanced Options"):
+    max_context_tokens = st.number_input("Max Context Tokens", 2000, 8000, 4000, 500)
+
+# Content Source Selection in main window
+st.markdown("### 📁 Select Content Source")
 
 # Mode selection
-processing_mode = st.sidebar.radio(
-    "Choose PDF Source:",
-    ["Scraped Companies", "Custom PDF Directory"],
-    help="Select whether to use PDFs from scraped companies or browse for a custom directory"
+processing_mode = st.radio(
+    "Choose your content source:",
+    ["Scraped Companies", "Custom Document Directory"],
+    help="Select whether to use content from scraped companies or browse for a custom directory",
+    horizontal=True
 )
 
 # Initialize variables
@@ -73,105 +87,211 @@ custom_pdf_dir = None
 company_display_name = None
 
 if processing_mode == "Scraped Companies":
-    # Check for available companies (domains with PDFs)
+    st.markdown("#### 🏢 Select Scraped Company")
+    
+    # Check for available companies (domains with content)
     downloads_dir = Path("downloads")
     available_companies = []
     if downloads_dir.exists():
         for domain_dir in downloads_dir.iterdir():
             if domain_dir.is_dir():
                 pdf_dir = domain_dir / "pdfs"
-                if pdf_dir.exists() and list(pdf_dir.glob("*.pdf")):
-                    available_companies.append(domain_dir.name)
+                html_dir = domain_dir / "html_pages"
+                
+                # Count available content
+                pdf_count = len(list(pdf_dir.glob("*.pdf"))) if pdf_dir.exists() else 0
+                html_count = len(list(html_dir.glob("*.html"))) if html_dir.exists() else 0
+                
+                if pdf_count > 0 or html_count > 0:
+                    available_companies.append({
+                        'name': domain_dir.name,
+                        'pdf_count': pdf_count,
+                        'html_count': html_count,
+                        'total_count': pdf_count + html_count
+                    })
 
     if not available_companies:
-        st.sidebar.warning("No companies with PDFs found in downloads directory.")
-        st.sidebar.info("Please run the scraper first or switch to 'Custom PDF Directory' mode.")
+        st.warning("🚫 No companies with content found in downloads directory.")
+        st.info("💡 Please run the scraper first or switch to 'Custom Document Directory' mode.")
     else:
-        # Company selection
-        selected_company = st.sidebar.selectbox(
-            "Select Company Domain",
-            available_companies,
-            help="Choose a company domain that has been scraped"
-        )
-        company_display_name = selected_company
+        # Company selection with details
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            company_names = [comp['name'] for comp in available_companies]
+            selected_company = st.selectbox(
+                "Select Company Domain:",
+                company_names,
+                help="Choose a company domain that has been scraped"
+            )
+            company_display_name = selected_company
+        
+        with col2:
+            # Show details for selected company
+            if selected_company:
+                selected_comp_data = next(comp for comp in available_companies if comp['name'] == selected_company)
+                st.metric("PDF Files", selected_comp_data['pdf_count'])
+                st.metric("HTML Pages", selected_comp_data['html_count'])
+                st.metric("Total Documents", selected_comp_data['total_count'])
 
-else:  # Custom PDF Directory mode
-    st.sidebar.markdown("### 📁 Browse for PDF Directory")
+else:  # Custom Document Directory mode
+    st.markdown("#### � Browse for Content Directory")
     
-    # Text input for manual path entry
-    manual_path = st.sidebar.text_input(
-        "Enter PDF Directory Path:",
-        placeholder="/path/to/your/pdfs",
-        help="Enter the full path to a directory containing PDF files"
-    )
+    # Initialize session state for directory navigation
+    if 'current_directory' not in st.session_state:
+        st.session_state.current_directory = str(Path.home())
+    if 'selected_directory' not in st.session_state:
+        st.session_state.selected_directory = None
     
-    # File browser simulation using selectbox
-    if manual_path and Path(manual_path).exists():
-        custom_pdf_dir = manual_path
-        pdf_count = len(list(Path(manual_path).glob("*.pdf")))
-        st.sidebar.success(f"✅ Found {pdf_count} PDF files")
+    def get_directories(path):
+        """Get list of directories in the given path"""
+        try:
+            path_obj = Path(path)
+            if not path_obj.exists() or not path_obj.is_dir():
+                return []
+            
+            directories = []
+            # Add parent directory option (except for root)
+            if path_obj.parent != path_obj:
+                directories.append("📁 .. (Parent Directory)")
+            
+            # Add subdirectories
+            for item in sorted(path_obj.iterdir()):
+                if item.is_dir() and not item.name.startswith('.'):
+                    # Check if directory contains content
+                    pdf_count = len(list(item.glob("*.pdf")))
+                    html_count = len(list(item.glob("*.html")))
+                    total_count = pdf_count + html_count
+                    
+                    if total_count > 0:
+                        directories.append(f"📁 {item.name} ({total_count} files)")
+                    else:
+                        directories.append(f"📁 {item.name}")
+            
+            return directories
+        except PermissionError:
+            return ["❌ Permission denied"]
+        except Exception:
+            return ["❌ Error reading directory"]
+    
+    # Directory navigation in main window
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        # Current directory display
+        st.markdown("**Current Directory:**")
+        st.code(st.session_state.current_directory)
+        
+        # Directory browser
+        directories = get_directories(st.session_state.current_directory)
+        
+        if directories:
+            selected_dir = st.selectbox(
+                "📂 Select Directory:",
+                ["Select a directory..."] + directories,
+                key="directory_browser",
+                help="Navigate through directories to find your content"
+            )
+            
+            if selected_dir != "Select a directory...":
+                if selected_dir == "📁 .. (Parent Directory)":
+                    # Navigate to parent directory
+                    st.session_state.current_directory = str(Path(st.session_state.current_directory).parent)
+                    st.rerun()
+                elif selected_dir.startswith("📁"):
+                    # Extract directory name and navigate
+                    dir_name = selected_dir.split(" ")[1]
+                    if "(" in dir_name:
+                        dir_name = dir_name.split(" (")[0]
+                    new_path = Path(st.session_state.current_directory) / dir_name
+                    st.session_state.current_directory = str(new_path)
+                    st.rerun()
+    
+    with col2:
+        # Quick navigation buttons
+        st.markdown("**Quick Navigation:**")
+        
+        if st.button("🏠 Home", help="Go to home directory"):
+            st.session_state.current_directory = str(Path.home())
+            st.rerun()
+        
+        if st.button("📥 Downloads", help="Go to Downloads folder"):
+            downloads_path = Path.home() / "Downloads"
+            if downloads_path.exists():
+                st.session_state.current_directory = str(downloads_path)
+                st.rerun()
+        
+        if st.button("📄 Project", help="Go to project directory"):
+            st.session_state.current_directory = str(Path.cwd())
+            st.rerun()
+    
+    # Current directory content analysis
+    current_path = Path(st.session_state.current_directory)
+    if current_path.exists():
+        pdf_count = len(list(current_path.glob("*.pdf")))
+        html_count = len(list(current_path.glob("*.html")))
+        total_count = pdf_count + html_count
+        
+        # Show content summary
+        if total_count > 0:
+            col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
+            
+            with col1:
+                st.metric("PDF Files", pdf_count)
+            with col2:
+                st.metric("HTML Pages", html_count)
+            with col3:
+                st.metric("Total Documents", total_count)
+            with col4:
+                # Use current directory button
+                if st.button("📋 Use This Directory", type="primary"):
+                    st.session_state.selected_directory = st.session_state.current_directory
+                    st.rerun()
+        else:
+            st.info("ℹ️ No PDF or HTML files found in current directory")
+    
+    # Show selected directory (if any)
+    if st.session_state.selected_directory:
+        st.success(f"✅ **Selected Directory:** {st.session_state.selected_directory}")
+        custom_pdf_dir = st.session_state.selected_directory
         
         # Company name input
-        company_display_name = st.sidebar.text_input(
-            "Company Name:",
-            value=Path(manual_path).name,
-            help="Enter a name for this company/organization"
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            company_display_name = st.text_input(
+                "Company Name:",
+                value=Path(st.session_state.selected_directory).name,
+                help="Enter a name for this company/organization"
+            )
+        with col2:
+            # Clear selection button
+            if st.button("🗑️ Clear Selection"):
+                st.session_state.selected_directory = None
+                st.rerun()
+    
+    # Manual path input (as backup)
+    with st.expander("💻 Manual Path Entry"):
+        manual_path = st.text_input(
+            "Enter directory path directly:",
+            placeholder="/path/to/your/documents",
+            help="Enter the full path to a directory containing PDF or HTML files"
         )
-    elif manual_path:
-        st.sidebar.error("❌ Directory not found or inaccessible")
-    
-    # Alternative: Common directories quick selection
-    st.sidebar.markdown("#### Quick Selection")
-    common_dirs = [
-        str(Path.home() / "Desktop"),
-        str(Path.home() / "Downloads"), 
-        str(Path.home() / "Documents"),
-        str(Path.cwd())
-    ]
-    
-    quick_dir = st.sidebar.selectbox(
-        "Or browse common locations:",
-        ["Select a location..."] + common_dirs,
-        help="Choose from common directory locations"
-    )
-    
-    if quick_dir != "Select a location...":
-        quick_path = Path(quick_dir)
-        if quick_path.exists():
-            # Show subdirectories that contain PDFs
-            subdirs_with_pdfs = []
-            try:
-                for subdir in quick_path.iterdir():
-                    if subdir.is_dir():
-                        pdf_count = len(list(subdir.glob("*.pdf")))
-                        if pdf_count > 0:
-                            subdirs_with_pdfs.append(f"{subdir.name} ({pdf_count} PDFs)")
-                
-                if subdirs_with_pdfs:
-                    selected_subdir = st.sidebar.selectbox(
-                        f"Folders with PDFs in {quick_path.name}:",
-                        ["Select a folder..."] + subdirs_with_pdfs
-                    )
-                    
-                    if selected_subdir != "Select a folder...":
-                        folder_name = selected_subdir.split(" (")[0]
-                        custom_pdf_dir = str(quick_path / folder_name)
-                        company_display_name = folder_name
-                else:
-                    # Check if current directory has PDFs
-                    pdf_count = len(list(quick_path.glob("*.pdf")))
-                    if pdf_count > 0:
-                        if st.sidebar.button(f"Use {quick_path.name} ({pdf_count} PDFs)"):
-                            custom_pdf_dir = str(quick_path)
-                            company_display_name = quick_path.name
-                    else:
-                        st.sidebar.info(f"No PDFs found in {quick_path.name} or its subdirectories")
-                        
-            except PermissionError:
-                st.sidebar.error("❌ Permission denied accessing this directory")
+        
+        if manual_path and Path(manual_path).exists():
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                path_pdf_count = len(list(Path(manual_path).glob("*.pdf")))
+                path_html_count = len(list(Path(manual_path).glob("*.html")))
+                st.info(f"Found {path_pdf_count} PDF files and {path_html_count} HTML pages")
+            with col2:
+                if st.button("✅ Use Manual Path"):
+                    st.session_state.selected_directory = manual_path
+                    st.rerun()
+        elif manual_path:
+            st.error("❌ Directory not found or inaccessible")
 
 # Processing parameters (show only if we have a valid source)
-if (processing_mode == "Scraped Companies" and selected_company) or (processing_mode == "Custom PDF Directory" and custom_pdf_dir):
+if (processing_mode == "Scraped Companies" and selected_company) or (processing_mode == "Custom Document Directory" and custom_pdf_dir):
     st.sidebar.subheader("Processing Parameters")
     chunk_size = st.sidebar.slider("Chunk Size", 500, 2000, 1000, 100)
     chunk_overlap = st.sidebar.slider("Chunk Overlap", 100, 500, 200, 50)
@@ -190,28 +310,40 @@ if (processing_mode == "Scraped Companies" and selected_company) or (processing_
     with col1:
         if processing_mode == "Scraped Companies":
             st.subheader(f"Generate Dossier for: {selected_company}")
-            # Show PDF count
-            pdf_dir = downloads_dir / selected_company / "pdfs"
+            
+            # Show content counts
+            company_dir = downloads_dir / selected_company
+            pdf_dir = company_dir / "pdfs"
+            html_dir = company_dir / "html_pages"
+            
             pdf_count = len(list(pdf_dir.glob("*.pdf"))) if pdf_dir.exists() else 0
-            source_info = f"Found {pdf_count} PDF files from scraped data"
+            html_count = len(list(html_dir.glob("*.html"))) if html_dir.exists() else 0
+            total_count = pdf_count + html_count
+            
+            source_info = f"Found {pdf_count} PDF files and {html_count} HTML pages ({total_count} total documents)"
+            
         else:
             st.subheader(f"Generate Dossier for: {company_display_name}")
-            # Show PDF count from custom directory
+            
+            # Show content count from custom directory
             pdf_count = len(list(Path(custom_pdf_dir).glob("*.pdf"))) if custom_pdf_dir else 0
-            source_info = f"Found {pdf_count} PDF files in custom directory"
+            html_count = len(list(Path(custom_pdf_dir).glob("*.html"))) if custom_pdf_dir else 0
+            total_count = pdf_count + html_count
+            
+            source_info = f"Found {pdf_count} PDF files and {html_count} HTML pages ({total_count} total documents)"
         
         st.info(source_info)
         
         # Show source path
         if processing_mode == "Scraped Companies" and selected_company:
-            st.code(f"Source: downloads/{selected_company}/pdfs/")
+            st.code(f"Sources: downloads/{selected_company}/pdfs/ and downloads/{selected_company}/html_pages/")
         elif custom_pdf_dir:
             st.code(f"Source: {custom_pdf_dir}")
         
         # Generate button
-        if st.button("🚀 Generate Dossier", type="primary", use_container_width=True):
-            if pdf_count == 0:
-                st.error("No PDF files found in the selected source.")
+        if st.button("🚀 Generate Enhanced Dossier", type="primary", use_container_width=True):
+            if total_count == 0:
+                st.error("No documents found in the selected source.")
             else:
                 # Initialize progress tracking
                 progress_bar = st.progress(0)
@@ -219,7 +351,7 @@ if (processing_mode == "Scraped Companies" and selected_company) or (processing_
                 
                 try:
                     # Initialize generator
-                    status_text.text("Initializing dossier generator...")
+                    status_text.text("Initializing enhanced dossier generator...")
                     generator = DossierGenerator(
                         downloads_dir="downloads",
                         chunk_size=chunk_size,
@@ -228,13 +360,14 @@ if (processing_mode == "Scraped Companies" and selected_company) or (processing_
                     )
                     progress_bar.progress(20)
                     
-                    # Process PDFs based on mode
-                    status_text.text("Processing PDF files...")
+                    # Process documents based on mode
+                    status_text.text("Processing PDF and HTML content...")
                     if processing_mode == "Scraped Companies":
                         dossier = generator.generate_company_dossier(company_domain=selected_company)
                     else:
                         dossier = generator.generate_company_dossier(
                             pdf_directory=custom_pdf_dir,
+                            html_directory=custom_pdf_dir,  # Same directory for both
                             company_name=company_display_name
                         )
                     progress_bar.progress(80)
@@ -272,30 +405,32 @@ if (processing_mode == "Scraped Companies" and selected_company) or (processing_
                     status_text.empty()
 else:
     # Show instructions when no valid source is selected
-    st.info("👆 Please select a PDF source in the sidebar to begin")
+    st.info("👆 Please select a content source in the sidebar to begin")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.subheader("📊 Scraped Companies Mode")
         st.markdown("""
-        Use PDFs that were scraped from company websites:
-        - Select from available scraped companies
-        - PDFs are organized by domain
-        - Automatic company identification
+        Use content from scraped companies:
+        - **PDF Documents**: Annual reports, presentations, financial statements
+        - **HTML Pages**: Website content, news, about pages, product information
+        - **Automatic organization** by domain
+        - **Integrated analysis** of all content types
         """)
         
     with col2:
-        st.subheader("📁 Custom PDF Directory Mode") 
+        st.subheader("📁 Custom Document Directory Mode") 
         st.markdown("""
-        Use any directory containing PDF files:
-        - Browse your file system
-        - Analyze any collection of PDFs
-        - Customize company name
+        Use any collection of documents:
+        - **Mixed content**: PDFs and HTML files
+        - **Browse your file system** for any document collection
+        - **Custom company naming** and analysis
+        - **Flexible source management**
         """)
 
 # Right column - Quick Actions and Info
-if (processing_mode == "Scraped Companies" and available_companies) or (processing_mode == "Custom PDF Directory"):
+if (processing_mode == "Scraped Companies" and available_companies) or (processing_mode == "Custom Document Directory"):
     with col2:
         st.subheader("Quick Actions")
         
@@ -303,7 +438,7 @@ if (processing_mode == "Scraped Companies" and available_companies) or (processi
         st.markdown(f"**Mode:** {processing_mode}")
         if processing_mode == "Scraped Companies" and selected_company:
             st.markdown(f"**Source:** {selected_company}")
-        elif processing_mode == "Custom PDF Directory" and custom_pdf_dir:
+        elif processing_mode == "Custom Document Directory" and custom_pdf_dir:
             st.markdown(f"**Directory:** {Path(custom_pdf_dir).name}")
         
         # View existing dossiers

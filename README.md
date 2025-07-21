@@ -37,17 +37,18 @@ This launches the main OSINT Toolkit with all tools integrated in one interface.
 - **🛡️ Error Handling**: Robust async error management and retry logic
 
 ### 📋 AI-Powered Dossier Generation
-- **Hierarchical Analysis**: Process hundreds of PDFs using semantic chunking
+- **Multi-format Analysis**: Process both PDFs and HTML content for comprehensive intelligence
+- **Hierarchical Analysis**: Process hundreds of documents using semantic chunking
 - **Context Management**: Respect AI model token limits with intelligent batching
 - **Comprehensive Reports**: Generate executive summaries, financial highlights, personnel info
-- **Multiple Sources**: Support both scraped PDFs and custom document collections
+- **Multiple Sources**: Support both scraped content and custom document collections
 - **Export Options**: JSON for data processing, HTML for presentation
 
 ## 🎯 Typical OSINT Workflow
 
 1. **🗺️ Map Website** → Discover structure and identify all accessible content
 2. **📄 Scrape Content** → Download HTML pages, PDFs and extract intelligence data  
-3. **📋 Generate Dossier** → Create comprehensive AI-powered analysis report
+3. **📋 Generate Dossier** → Create comprehensive AI-powered analysis from all collected content
 
 ## 📁 Project Structure
 
@@ -149,6 +150,7 @@ OSINT/
 ├── downloads/           # Scraped content
 │   └── www.company.com/
 │       ├── visited_urls.txt
+│       ├── html_pages/  # Downloaded HTML content
 │       └── pdfs/        # Downloaded PDF files
 ├── dossiers/           # Generated intelligence reports
 │   ├── company_dossier.json
