@@ -923,48 +923,59 @@ OPENAI_API_KEY=sk-your-actual-api-key-here
         
         # Display dossier content
         st.subheader(f"Company: {dossier.company_name}")
+        st.markdown("*Business Intelligence Proforma Analysis*")
         
-        # Executive Summary
-        st.markdown("### 📋 Executive Summary")
-        st.write(dossier.executive_summary)
-        
-        # Tabs for different sections
+        # Create tabs for the 9 sections
         tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "🏢 Business Overview", 
-            "💰 Financial Highlights", 
-            "👥 Key Personnel", 
-            "📍 Locations", 
-            "🛍️ Products & Services"
+            "🏢 Identity & Purpose", 
+            "�️ Products & Services", 
+            "👥 Customers & Stakeholders", 
+            "⚙️ Business Activities", 
+            "🏗️ Organisation & Structure"
+        ])
+        
+        tab6, tab7, tab8, tab9 = st.tabs([
+            "📡 Channels & Interactions",
+            "⚖️ Compliance & Regulatory", 
+            "💻 Technology Landscape", 
+            "🎯 Strategic Priorities"
         ])
         
         with tab1:
-            st.write(dossier.business_overview)
+            st.markdown("#### Company Identity and Purpose")
+            st.write(dossier.company_identity_and_purpose)
         
         with tab2:
-            st.write(dossier.financial_highlights)
+            st.markdown("#### Products and Services Offered")
+            st.write(dossier.products_and_services_offered)
         
         with tab3:
-            if dossier.key_personnel:
-                for person in dossier.key_personnel:
-                    st.write(f"• {person}")
-            else:
-                st.write("No key personnel information found.")
+            st.markdown("#### Customer and Stakeholder Landscape")
+            st.write(dossier.customer_and_stakeholder_landscape)
         
         with tab4:
-            if dossier.locations:
-                for location in dossier.locations:
-                    st.write(f"• {location}")
-            else:
-                st.write("No location information found.")
+            st.markdown("#### Core Business Activities and Processes")
+            st.write(dossier.core_business_activities_and_processes)
         
         with tab5:
-            if dossier.products_services:
-                for item in dossier.products_services[:10]:  # Limit display
-                    st.write(f"• {item}")
-                if len(dossier.products_services) > 10:
-                    st.write(f"... and {len(dossier.products_services) - 10} more items")
-            else:
-                st.write("No products/services information found.")
+            st.markdown("#### Organisational Structure and Functions")
+            st.write(dossier.organisational_structure_and_functions)
+        
+        with tab6:
+            st.markdown("#### Channels and Customer Interactions")
+            st.write(dossier.channels_and_customer_interactions)
+        
+        with tab7:
+            st.markdown("#### Compliance and Regulatory Context")
+            st.write(dossier.compliance_and_regulatory_context)
+        
+        with tab8:
+            st.markdown("#### Technology Landscape")
+            st.write(dossier.technology_landscape)
+        
+        with tab9:
+            st.markdown("#### Strategic Priorities and Data Challenges")
+            st.write(dossier.strategic_priorities_and_data_challenges)
         
         # Metadata
         with st.expander("📊 Metadata"):

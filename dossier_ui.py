@@ -300,9 +300,17 @@ if (processing_mode == "Scraped Companies" and selected_company) or (processing_
     # Advanced options
     with st.sidebar.expander("Advanced Options"):
         max_context_tokens = st.number_input("Max Context Tokens", 2000, 8000, 4000, 500)
-        include_financial = st.checkbox("Include Financial Analysis", True)
-        include_personnel = st.checkbox("Include Personnel Analysis", True)
-        include_locations = st.checkbox("Include Location Analysis", True)
+        st.markdown("**Business Intelligence Proforma**")
+        st.markdown("All 9 sections are included by default:")
+        st.markdown("• Company Identity & Purpose")
+        st.markdown("• Products & Services")
+        st.markdown("• Customer & Stakeholder Landscape")
+        st.markdown("• Business Activities & Processes")
+        st.markdown("• Organisational Structure")
+        st.markdown("• Channels & Interactions")
+        st.markdown("• Compliance & Regulatory")
+        st.markdown("• Technology Landscape")
+        st.markdown("• Strategic Priorities")
     
     # Main interface
     col1, col2 = st.columns([2, 1])
@@ -497,47 +505,61 @@ if 'current_dossier' in st.session_state:
     # Display dossier content
     st.subheader(f"Company: {dossier.company_name}")
     
-    # Executive Summary
-    st.subheader("📋 Executive Summary")
-    st.write(dossier.executive_summary)
+    # Display business intelligence proforma
+    st.subheader("� Business Intelligence Proforma")
+    st.markdown("*Comprehensive 9-Section Analysis*")
     
-    # Tabs for different sections
+    # Create tabs for the 9 sections  
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🏢 Business Overview", 
-        "💰 Financial Highlights", 
-        "👥 Key Personnel", 
-        "📍 Locations", 
-        "🛍️ Products & Services"
+        "🏢 Identity & Purpose", 
+        "�️ Products & Services", 
+        "👥 Customers & Stakeholders", 
+        "⚙️ Business Activities", 
+        "🏗️ Organisation & Structure"
+    ])
+    
+    tab6, tab7, tab8, tab9 = st.tabs([
+        "📡 Channels & Interactions",
+        "⚖️ Compliance & Regulatory", 
+        "💻 Technology Landscape", 
+        "🎯 Strategic Priorities"
     ])
     
     with tab1:
-        st.write(dossier.business_overview)
+        st.markdown("#### Company Identity and Purpose")
+        st.write(dossier.company_identity_and_purpose)
     
     with tab2:
-        st.write(dossier.financial_highlights)
+        st.markdown("#### Products and Services Offered")
+        st.write(dossier.products_and_services_offered)
     
     with tab3:
-        if dossier.key_personnel:
-            for person in dossier.key_personnel:
-                st.write(f"• {person}")
-        else:
-            st.write("No key personnel information found.")
+        st.markdown("#### Customer and Stakeholder Landscape")
+        st.write(dossier.customer_and_stakeholder_landscape)
     
     with tab4:
-        if dossier.locations:
-            for location in dossier.locations:
-                st.write(f"• {location}")
-        else:
-            st.write("No location information found.")
+        st.markdown("#### Core Business Activities and Processes")
+        st.write(dossier.core_business_activities_and_processes)
     
     with tab5:
-        if dossier.products_services:
-            for item in dossier.products_services[:10]:  # Limit display
-                st.write(f"• {item}")
-            if len(dossier.products_services) > 10:
-                st.write(f"... and {len(dossier.products_services) - 10} more items")
-        else:
-            st.write("No products/services information found.")
+        st.markdown("#### Organisational Structure and Functions")
+        st.write(dossier.organisational_structure_and_functions)
+    
+    with tab6:
+        st.markdown("#### Channels and Customer Interactions")
+        st.write(dossier.channels_and_customer_interactions)
+    
+    with tab7:
+        st.markdown("#### Compliance and Regulatory Context")
+        st.write(dossier.compliance_and_regulatory_context)
+    
+    with tab8:
+        st.markdown("#### Technology Landscape")
+        st.write(dossier.technology_landscape)
+    
+    with tab9:
+        st.markdown("#### Strategic Priorities and Data Challenges")
+        st.write(dossier.strategic_priorities_and_data_challenges)
     
     # Metadata
     with st.expander("📊 Metadata"):
@@ -599,7 +621,7 @@ with st.expander("ℹ️ How to Use"):
     ### Output:
     - **JSON Format**: Structured data for further processing
     - **HTML Format**: Human-readable report with formatting
-    - **Sections Include**: Executive summary, business overview, financials, personnel, locations, products/services
+    - **Sections Include**: 9-section business intelligence proforma covering identity, products, customers, activities, structure, channels, compliance, technology, and strategy
     
     ### Technical Approach:
     - **Hierarchical Summarization**: PDFs are chunked, embedded, and clustered by topic

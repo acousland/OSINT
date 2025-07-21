@@ -43,17 +43,37 @@ class DocumentChunk:
 
 @dataclass
 class CompanyDossier:
-    """Structured company dossier"""
+    """Structured company dossier following business intelligence proforma"""
     company_name: str
-    executive_summary: str
-    business_overview: str
-    financial_highlights: str
-    key_personnel: List[str]
-    products_services: List[str]
-    locations: List[str]
-    recent_developments: List[str]
-    risk_factors: List[str]
-    competitive_position: str
+    
+    # 1. Company Identity and Purpose
+    company_identity_and_purpose: str
+    
+    # 2. Products and Services Offered
+    products_and_services_offered: str
+    
+    # 3. Customer and Stakeholder Landscape
+    customer_and_stakeholder_landscape: str
+    
+    # 4. Core Business Activities and Processes
+    core_business_activities_and_processes: str
+    
+    # 5. Organisational Structure and Functions
+    organisational_structure_and_functions: str
+    
+    # 6. Channels and Customer Interactions
+    channels_and_customer_interactions: str
+    
+    # 7. Compliance and Regulatory Context
+    compliance_and_regulatory_context: str
+    
+    # 8. Technology Landscape
+    technology_landscape: str
+    
+    # 9. Strategic Priorities and Data Challenges
+    strategic_priorities_and_data_challenges: str
+    
+    # Metadata
     sources: List[str]
     last_updated: str
 
@@ -385,15 +405,15 @@ class DossierGenerator:
             print("No content found to process. Returning minimal dossier.")
             return CompanyDossier(
                 company_name=final_company_name,
-                executive_summary="No content available for analysis.",
-                business_overview="No business information found.",
-                financial_highlights="No financial information found.",
-                key_personnel=[],
-                products_services=[],
-                locations=[],
-                recent_developments=[],
-                risk_factors=[],
-                competitive_position="",
+                company_identity_and_purpose="No content available for analysis of company identity and purpose.",
+                products_and_services_offered="No information found about products and services.",
+                customer_and_stakeholder_landscape="No customer or stakeholder information found.",
+                core_business_activities_and_processes="No business activities or processes information found.",
+                organisational_structure_and_functions="No organisational structure information found.",
+                channels_and_customer_interactions="No customer interaction channels information found.",
+                compliance_and_regulatory_context="No compliance or regulatory information found.",
+                technology_landscape="No technology landscape information found.",
+                strategic_priorities_and_data_challenges="No strategic priorities or data challenges information found.",
                 sources=[],
                 last_updated=datetime.now().isoformat()
             )
@@ -413,54 +433,317 @@ class DossierGenerator:
             summary = self.generate_topic_summary(chunks, topic_name)
             topic_summaries[topic_name] = summary
         
-        # Extract specific information using targeted queries
-        business_overview = self._extract_business_info()
-        financial_info = self._extract_financial_info()
-        personnel_info = self._extract_personnel_info()
-        locations = self._extract_locations()
-        products_services = self._extract_products_services()
+        # Extract specific information using new proforma structure
+        company_identity = self._extract_company_identity_and_purpose()
+        products_services = self._extract_products_and_services()
+        customer_stakeholder = self._extract_customer_and_stakeholder_landscape()
+        business_activities = self._extract_core_business_activities()
+        org_structure = self._extract_organisational_structure()
+        channels_interactions = self._extract_channels_and_interactions()
+        compliance_regulatory = self._extract_compliance_and_regulatory()
+        technology_landscape = self._extract_technology_landscape()
+        strategic_priorities = self._extract_strategic_priorities()
         
-        # Generate executive summary
-        exec_summary = self._generate_executive_summary(topic_summaries)
-        
-        # Create dossier
+        # Create dossier using new proforma structure
         dossier = CompanyDossier(
             company_name=final_company_name,
-            executive_summary=exec_summary,
-            business_overview=business_overview,
-            financial_highlights=financial_info,
-            key_personnel=personnel_info,
-            products_services=products_services,
-            locations=locations,
-            recent_developments=[],  # Could be extracted with date-aware analysis
-            risk_factors=[],  # Could be extracted with risk-focused queries
-            competitive_position="",  # Could be extracted with competitor analysis
+            company_identity_and_purpose=company_identity,
+            products_and_services_offered=products_services,
+            customer_and_stakeholder_landscape=customer_stakeholder,
+            core_business_activities_and_processes=business_activities,
+            organisational_structure_and_functions=org_structure,
+            channels_and_customer_interactions=channels_interactions,
+            compliance_and_regulatory_context=compliance_regulatory,
+            technology_landscape=technology_landscape,
+            strategic_priorities_and_data_challenges=strategic_priorities,
             sources=[chunk.source_file for chunk in self.chunks],
             last_updated=datetime.now().isoformat()
         )
         
         return dossier
     
-    def _extract_business_info(self) -> str:
-        """Extract business overview information"""
+    def _extract_company_identity_and_purpose(self) -> str:
+        """Extract company identity, mission, and primary objectives"""
         relevant_chunks = self.find_relevant_chunks(
-            "business model company overview services products operations", 
-            top_k=5
+            "company mission vision purpose objectives core business industry sector competitive advantage positioning",
+            top_k=15
         )
         
-        content = "\n".join([chunk.content for chunk in relevant_chunks])
-        if not content:
-            return "No business information found in available documents."
-            
+        combined_text = ""
+        for chunk in relevant_chunks:
+            if len(combined_text) + len(chunk.content) < self.max_context_tokens * 3:
+                combined_text += "\n" + chunk.content
+        
+        if not combined_text:
+            return "No company identity information found in available documents."
+        
         prompt = f"""
-        Based on the following content, provide a business overview:
+        Analyze the following content and provide a comprehensive overview of the company's identity and purpose:
         
-        {content[:self.max_context_tokens * 3]}
+        1. What the company does (core business activities)
+        2. Mission and primary objectives
+        3. Core industry or sector
+        4. Special positioning or competitive differentiators
         
-        Business Overview:
+        Content:
+        {combined_text}
+        
+        Company Identity and Purpose:
         """
         
-        return self._call_llm(prompt, max_tokens=400)
+        return self._call_llm(prompt, max_tokens=800)
+    
+    def _extract_products_and_services(self) -> str:
+        """Extract products and services offered"""
+        relevant_chunks = self.find_relevant_chunks(
+            "products services offerings solutions portfolio categories lines hierarchy classification",
+            top_k=15
+        )
+        
+        combined_text = ""
+        for chunk in relevant_chunks:
+            if len(combined_text) + len(chunk.content) < self.max_context_tokens * 3:
+                combined_text += "\n" + chunk.content
+        
+        if not combined_text:
+            return "No products and services information found in available documents."
+        
+        prompt = f"""
+        Analyze the following content and describe the company's products and services:
+        
+        1. Major categories or lines of products/services
+        2. Product/service hierarchy or classification system
+        3. Key offerings and their positioning
+        4. Any specialized or unique solutions
+        
+        Content:
+        {combined_text}
+        
+        Products and Services Offered:
+        """
+        
+        return self._call_llm(prompt, max_tokens=800)
+    
+    def _extract_customer_and_stakeholder_landscape(self) -> str:
+        """Extract customer and stakeholder information"""
+        relevant_chunks = self.find_relevant_chunks(
+            "customers clients stakeholders partners suppliers distributors segments retail business government",
+            top_k=15
+        )
+        
+        combined_text = ""
+        for chunk in relevant_chunks:
+            if len(combined_text) + len(chunk.content) < self.max_context_tokens * 3:
+                combined_text += "\n" + chunk.content
+        
+        if not combined_text:
+            return "No customer and stakeholder information found in available documents."
+        
+        prompt = f"""
+        Analyze the following content and describe the customer and stakeholder landscape:
+        
+        1. Typical customers and their types/segments (retail, business, government)
+        2. Key external stakeholders (partners, suppliers, distributors)
+        3. Customer characteristics and segmentation
+        4. Stakeholder relationships and dependencies
+        
+        Content:
+        {combined_text}
+        
+        Customer and Stakeholder Landscape:
+        """
+        
+        return self._call_llm(prompt, max_tokens=800)
+    
+    def _extract_core_business_activities(self) -> str:
+        """Extract core business activities and processes"""
+        relevant_chunks = self.find_relevant_chunks(
+            "business activities processes operations sales manufacturing production service delivery financial management human resources workflow",
+            top_k=20
+        )
+        
+        combined_text = ""
+        for chunk in relevant_chunks:
+            if len(combined_text) + len(chunk.content) < self.max_context_tokens * 3:
+                combined_text += "\n" + chunk.content
+        
+        if not combined_text:
+            return "No core business activities information found in available documents."
+        
+        prompt = f"""
+        Analyze the following content and describe the core business activities and processes:
+        
+        1. Primary value-creating activities or value streams
+        2. Sales processes (marketing to order fulfillment)
+        3. Manufacturing, production, or service delivery processes
+        4. Financial management processes (billing, invoicing, payments)
+        5. Human resource processes (hiring, payroll, management)
+        6. Other business-critical processes and their flow
+        
+        Content:
+        {combined_text}
+        
+        Core Business Activities and Processes:
+        """
+        
+        return self._call_llm(prompt, max_tokens=1000)
+    
+    def _extract_organisational_structure(self) -> str:
+        """Extract organisational structure and functions"""
+        relevant_chunks = self.find_relevant_chunks(
+            "organisational structure departments teams units functions roles collaboration management leadership divisions",
+            top_k=15
+        )
+        
+        combined_text = ""
+        for chunk in relevant_chunks:
+            if len(combined_text) + len(chunk.content) < self.max_context_tokens * 3:
+                combined_text += "\n" + chunk.content
+        
+        if not combined_text:
+            return "No organisational structure information found in available documents."
+        
+        prompt = f"""
+        Analyze the following content and describe the organisational structure and functions:
+        
+        1. Organisational units, departments, or teams and their roles
+        2. How units collaborate or exchange information
+        3. Leadership structure and management hierarchy
+        4. Functional groupings and their responsibilities
+        
+        Content:
+        {combined_text}
+        
+        Organisational Structure and Functions:
+        """
+        
+        return self._call_llm(prompt, max_tokens=800)
+    
+    def _extract_channels_and_interactions(self) -> str:
+        """Extract channels and customer interactions"""
+        relevant_chunks = self.find_relevant_chunks(
+            "channels interactions customers touchpoints online physical locations call centres social media distributors sales",
+            top_k=15
+        )
+        
+        combined_text = ""
+        for chunk in relevant_chunks:
+            if len(combined_text) + len(chunk.content) < self.max_context_tokens * 3:
+                combined_text += "\n" + chunk.content
+        
+        if not combined_text:
+            return "No channels and customer interactions information found in available documents."
+        
+        prompt = f"""
+        Analyze the following content and describe channels and customer interactions:
+        
+        1. How customers and stakeholders interact with the company
+        2. Online channels (websites, digital platforms, social media)
+        3. Physical channels (locations, retail, offices)
+        4. Service channels (call centres, support, distributors)
+        5. Significant touchpoints and customer journey
+        
+        Content:
+        {combined_text}
+        
+        Channels and Customer Interactions:
+        """
+        
+        return self._call_llm(prompt, max_tokens=800)
+    
+    def _extract_compliance_and_regulatory(self) -> str:
+        """Extract compliance and regulatory context"""
+        relevant_chunks = self.find_relevant_chunks(
+            "compliance regulatory regulation standards audits reporting obligations privacy financial safety legal requirements",
+            top_k=12
+        )
+        
+        combined_text = ""
+        for chunk in relevant_chunks:
+            if len(combined_text) + len(chunk.content) < self.max_context_tokens * 3:
+                combined_text += "\n" + chunk.content
+        
+        if not combined_text:
+            return "No compliance and regulatory information found in available documents."
+        
+        prompt = f"""
+        Analyze the following content and describe the compliance and regulatory context:
+        
+        1. Important regulatory or compliance areas (privacy, financial reporting, safety)
+        2. Critical compliance-related processes (audits, reporting obligations)
+        3. Industry standards and requirements
+        4. Regulatory bodies and oversight
+        
+        Content:
+        {combined_text}
+        
+        Compliance and Regulatory Context:
+        """
+        
+        return self._call_llm(prompt, max_tokens=600)
+    
+    def _extract_technology_landscape(self) -> str:
+        """Extract technology landscape information"""
+        relevant_chunks = self.find_relevant_chunks(
+            "technology systems IT CRM ERP HR software platforms digital infrastructure cloud applications databases",
+            top_k=15
+        )
+        
+        combined_text = ""
+        for chunk in relevant_chunks:
+            if len(combined_text) + len(chunk.content) < self.max_context_tokens * 3:
+                combined_text += "\n" + chunk.content
+        
+        if not combined_text:
+            return "No technology landscape information found in available documents."
+        
+        prompt = f"""
+        Analyze the following content and describe the technology landscape:
+        
+        1. Core technology or IT systems in use (CRM, ERP, HR systems)
+        2. Business processes each technology supports
+        3. Digital platforms and infrastructure
+        4. Technology integration and architecture
+        
+        Content:
+        {combined_text}
+        
+        Technology Landscape:
+        """
+        
+        return self._call_llm(prompt, max_tokens=800)
+    
+    def _extract_strategic_priorities(self) -> str:
+        """Extract strategic priorities and data challenges"""
+        relevant_chunks = self.find_relevant_chunks(
+            "strategic priorities strategy data challenges integration analytics transformation digital future goals objectives",
+            top_k=12
+        )
+        
+        combined_text = ""
+        for chunk in relevant_chunks:
+            if len(combined_text) + len(chunk.content) < self.max_context_tokens * 3:
+                combined_text += "\n" + chunk.content
+        
+        if not combined_text:
+            return "No strategic priorities and data challenges information found in available documents."
+        
+        prompt = f"""
+        Analyze the following content and describe strategic priorities and data challenges:
+        
+        1. Strategic data-related challenges or aspirations
+        2. Data integration, standardisation, or analytics priorities
+        3. Digital transformation initiatives
+        4. Future goals and strategic objectives
+        5. Technology and data modernization efforts
+        
+        Content:
+        {combined_text}
+        
+        Strategic Priorities and Data Challenges:
+        """
+        
+        return self._call_llm(prompt, max_tokens=800)
     
     def _extract_financial_info(self) -> str:
         """Extract financial information"""
@@ -498,54 +781,7 @@ class DossierGenerator:
             personnel.extend(matches)
         
         return list(set(personnel))  # Remove duplicates
-    
-    def _extract_locations(self) -> List[str]:
-        """Extract company locations"""
-        relevant_chunks = self.find_relevant_chunks(
-            "office location address headquarters branch facility", 
-            top_k=3
-        )
-        
-        locations = []
-        for chunk in relevant_chunks:
-            # Pattern for locations (simplified)
-            pattern = r'([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:, [A-Z]{2,3})?)'
-            matches = re.findall(pattern, chunk.content)
-            locations.extend([match for match in matches if len(match) > 3])
-        
-        return list(set(locations))[:10]  # Limit and remove duplicates
-    
-    def _extract_products_services(self) -> List[str]:
-        """Extract products and services"""
-        relevant_chunks = self.find_relevant_chunks(
-            "product service offering solution platform software", 
-            top_k=3
-        )
-        
-        products = []
-        for chunk in relevant_chunks:
-            # This would need more sophisticated NLP in practice
-            lines = chunk.content.split('\n')
-            for line in lines:
-                if any(word in line.lower() for word in ['product', 'service', 'solution']):
-                    products.append(line.strip())
-        
-        return list(set(products))[:15]  # Limit and remove duplicates
-    
-    def _generate_executive_summary(self, topic_summaries: Dict[str, str]) -> str:
-        """Generate executive summary from topic summaries"""
-        combined_summaries = "\n\n".join(topic_summaries.values())
-        
-        prompt = f"""
-        Based on the following topic summaries, create a concise executive summary of the company:
-        
-        {combined_summaries[:self.max_context_tokens * 3]}
-        
-        Executive Summary:
-        """
-        
-        return self._call_llm(prompt, max_tokens=400)
-    
+
     def check_api_configuration(self) -> Dict[str, Any]:
         """Check if API is properly configured"""
         api_key = os.getenv("OPENAI_API_KEY")
@@ -645,64 +881,75 @@ class DossierGenerator:
         print(f"Dossier saved to {output_path}")
     
     def export_dossier_html(self, dossier: CompanyDossier, output_path: str) -> None:
-        """Export dossier as HTML report"""
+        """Export dossier as HTML report with business intelligence proforma format"""
         html_template = f"""
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Company Dossier - {dossier.company_name}</title>
+            <title>Business Intelligence Dossier - {dossier.company_name}</title>
             <style>
-                body {{ font-family: Arial, sans-serif; margin: 40px; }}
-                h1 {{ color: #2c3e50; }}
-                h2 {{ color: #34495e; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }}
-                .summary {{ background-color: #f8f9fa; padding: 20px; border-radius: 5px; }}
-                .section {{ margin-bottom: 30px; }}
-                .list-item {{ margin-bottom: 5px; }}
-                .metadata {{ color: #7f8c8d; font-size: 0.9em; }}
+                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; line-height: 1.6; }}
+                h1 {{ color: #1a365d; text-align: center; margin-bottom: 40px; border-bottom: 3px solid #2b77ad; padding-bottom: 20px; }}
+                h2 {{ color: #2b77ad; border-left: 4px solid #4a90c2; padding-left: 15px; margin-top: 30px; margin-bottom: 20px; }}
+                .section {{ margin-bottom: 40px; padding: 20px; background-color: #f8fafe; border-radius: 8px; border: 1px solid #e2e8f0; }}
+                .section-content {{ padding: 10px 0; color: #2d3748; }}
+                .metadata {{ color: #718096; font-size: 0.9em; text-align: center; margin-top: 40px; padding: 20px; background-color: #edf2f7; border-radius: 5px; }}
+                .proforma-header {{ text-align: center; color: #4a5568; font-style: italic; margin-bottom: 30px; }}
             </style>
         </head>
         <body>
-            <h1>Company Dossier: {dossier.company_name}</h1>
+            <h1>Business Intelligence Dossier: {dossier.company_name}</h1>
+            <div class="proforma-header">Comprehensive Business Analysis Proforma</div>
             
             <div class="section">
-                <h2>Executive Summary</h2>
-                <div class="summary">{dossier.executive_summary}</div>
+                <h2>1. Company Identity and Purpose</h2>
+                <div class="section-content">{dossier.company_identity_and_purpose}</div>
             </div>
             
             <div class="section">
-                <h2>Business Overview</h2>
-                <p>{dossier.business_overview}</p>
+                <h2>2. Products and Services Offered</h2>
+                <div class="section-content">{dossier.products_and_services_offered}</div>
             </div>
             
             <div class="section">
-                <h2>Financial Highlights</h2>
-                <p>{dossier.financial_highlights}</p>
+                <h2>3. Customer and Stakeholder Landscape</h2>
+                <div class="section-content">{dossier.customer_and_stakeholder_landscape}</div>
             </div>
             
             <div class="section">
-                <h2>Key Personnel</h2>
-                <ul>
-                    {"".join([f"<li class='list-item'>{person}</li>" for person in dossier.key_personnel])}
-                </ul>
+                <h2>4. Core Business Activities and Processes</h2>
+                <div class="section-content">{dossier.core_business_activities_and_processes}</div>
             </div>
             
             <div class="section">
-                <h2>Products & Services</h2>
-                <ul>
-                    {"".join([f"<li class='list-item'>{item}</li>" for item in dossier.products_services[:10]])}
-                </ul>
+                <h2>5. Organisational Structure and Functions</h2>
+                <div class="section-content">{dossier.organisational_structure_and_functions}</div>
             </div>
             
             <div class="section">
-                <h2>Locations</h2>
-                <ul>
-                    {"".join([f"<li class='list-item'>{location}</li>" for location in dossier.locations[:10]])}
-                </ul>
+                <h2>6. Channels and Customer Interactions</h2>
+                <div class="section-content">{dossier.channels_and_customer_interactions}</div>
+            </div>
+            
+            <div class="section">
+                <h2>7. Compliance and Regulatory Context</h2>
+                <div class="section-content">{dossier.compliance_and_regulatory_context}</div>
+            </div>
+            
+            <div class="section">
+                <h2>8. Technology Landscape</h2>
+                <div class="section-content">{dossier.technology_landscape}</div>
+            </div>
+            
+            <div class="section">
+                <h2>9. Strategic Priorities and Data Challenges</h2>
+                <div class="section-content">{dossier.strategic_priorities_and_data_challenges}</div>
             </div>
             
             <div class="metadata">
-                <p>Generated on: {dossier.last_updated}</p>
-                <p>Sources: {len(set(dossier.sources))} documents processed</p>
+                <p><strong>Analysis Generated:</strong> {dossier.last_updated}</p>
+                <p><strong>Data Sources:</strong> {len(set(dossier.sources))} documents processed</p>
+                <p><strong>Intelligence Framework:</strong> 9-Section Business Analysis Proforma</p>
             </div>
         </body>
         </html>
