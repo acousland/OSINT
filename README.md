@@ -55,7 +55,6 @@ This launches the main OSINT Toolkit with all tools integrated in one interface.
 ```
 OSINT/
 ├── main.py              # 🏠 Unified application entry point
-├── app.py               # 🗺️ Legacy mapping/scraping interface  
 ├── dossier_ui.py        # 📋 Standalone dossier generator
 ├── dossier_generator.py # 🤖 Core AI dossier generation logic
 ├── cli_dossier.py       # 💻 Command-line dossier tool
@@ -64,6 +63,7 @@ OSINT/
 ├── run.sh              # 🚀 Unified launcher script
 ├── requirements.txt    # 📦 Python dependencies
 ├── .env.example        # ⚙️ Configuration template
+├── tests/              # 🧪 Test suite
 └── dossiers/           # 📊 Generated intelligence reports
 ```
 
@@ -191,21 +191,16 @@ OSINT/
 
 ### Command Line Interface
 
-#### Basic Usage
+#### Quick Start with Main Application
 
-Edit the `OSintel.py` file to set your target URL and parameters:
+Use the integrated main application (recommended):
 
-```python
-START_URL = "https://example.com"
-MAX_DEPTH = 1000
-
-ms.map(START_URL, MAX_DEPTH)  # Map the website
-sc.scrape(START_URL)          # Download/generate PDFs
-```
-
-Then run:
 ```bash
-python OSintel.py
+# Start the main OSINT toolkit
+./run.sh
+
+# Or directly:
+streamlit run main.py
 ```
 
 #### Individual Components
