@@ -9,9 +9,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import modules for different functionalities
-import mapStructure as ms
-import scrape as sc
-from dossier_generator import DossierGenerator, CompanyDossier
+from osint_toolkit.core.mapper import HighSpeedWebMapper
+from osint_toolkit.core.scraper import HighSpeedScraper
+from osint_toolkit.core.dossier import DossierGenerator, CompanyDossier
+from osint_toolkit.utils.config import config
 
 st.set_page_config(
     page_title="OSINT Toolkit",
@@ -260,11 +261,14 @@ def show_mapping_page():
                     try:
                         # Use the appropriate mapping function based on speed mode
                         if speed_mode == "Turbo":
-                            result = ms.turbo_map(start_url, max_depth)
+                            mapper = HighSpeedWebMapper()
+                            result = mapper.turbo_map(start_url, max_depth)
                         elif speed_mode == "Fast":
-                            result = ms.fast_map(start_url, max_depth) 
+                            mapper = HighSpeedWebMapper()
+                            result = mapper.fast_map(start_url, max_depth) 
                         else:  # Respectful
-                            result = ms.map(start_url, max_depth, max_concurrent=30, request_delay=delay)
+                            mapper = HighSpeedWebMapper()
+                            result = mapper.map(start_url, max_depth, max_concurrent=30, request_delay=delay)
                         
                         st.success('✅ High-speed website mapping completed!')
                         
@@ -352,11 +356,14 @@ def show_scraping_page():
                     try:
                         # Use appropriate scraping function based on speed mode
                         if speed_mode == "Turbo":
-                            result = sc.turbo_scrape(scrape_url)
+                            scraper = HighSpeedScraper()
+                            result = scraper.turbo_scrape(scrape_url)
                         elif speed_mode == "Fast":
-                            result = sc.fast_scrape(scrape_url)
+                            scraper = HighSpeedScraper()
+                            result = scraper.fast_scrape(scrape_url)
                         else:  # Normal
-                            result = sc.scrape(scrape_url, max_concurrent=max_concurrent)
+                            scraper = HighSpeedScraper()
+                            result = scraper.scrape(scrape_url, max_concurrent=max_concurrent)
                         
                         if result:
                             st.success('✅ High-speed scraping completed!')

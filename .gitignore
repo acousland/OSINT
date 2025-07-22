@@ -162,3 +162,10 @@ cython_debug/
 # OSINT Dossiers - Generated intelligence reports
 dossiers/*.html
 dossiers/*.json
+
+# OSINT Downloads - Scraped content (optional: can be large)
+# downloads/
+
+# Configuration files with sensitive data
+config/*.env
+config/local_*.py

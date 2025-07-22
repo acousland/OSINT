@@ -18,28 +18,12 @@ fi
 
 # Check command line argument for which app to run
 case "$1" in
-    "map"|"mapping")
-        echo "🚀 Starting OSINT Toolkit (Mapping Mode)..."
-        streamlit run main.py
-        ;;
-    "scrape"|"scraping") 
-        echo "📄 Starting OSINT Toolkit (Scraping Mode)..."
-        streamlit run main.py
-        ;;
     "dossier")
         echo "📋 Starting AI-Powered Dossier Generator..."
-        streamlit run dossier_ui.py
-        ;;
-    "setup"|"api")
-        echo "Starting API Key Setup..."
-        python setup_api.py
-        ;;
-    "check")
-        echo "Checking API Configuration..."
-        python setup_api.py check
+        streamlit run dossier_app.py
         ;;
     *)
-        echo "Starting OSINT Toolkit (Main Application)..."
-        streamlit run main.py
+        echo "🚀 Starting OSINT Toolkit (Main Application)..."
+        streamlit run app.py
         ;;
 esac

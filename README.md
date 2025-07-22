@@ -1,20 +1,24 @@
 # OSINT Toolkit
 
-A comprehensive Open Source Intelligence (OSINT) platform combining high-speed website mapping, content scraping, and AI-powered company dossier generation in a unified interface.
+A comprehensive Open Source Intelligence (OSINT)       └── utils/               # 🛠️ Utility modules
+           ├── config.py        # ⚙️ Configuration management
+           └── setup.py         # 🔧 API setup utilities
+├── tests/                       # 🧪 Test suite
+├── config/                      # ⚙️ Configuration filesrm combining high-speed website mapping, content scraping, and AI-powered company dossier generation in a unified interface.
 
 ## 🚀 Quick Start
 
-### Unified Application (Recommended)
+### Main Application
 ```bash
 ./run.sh
 ```
 This launches the main OSINT Toolkit with all tools integrated in one interface.
 
-### Individual Tools
+### Dossier Generator
 ```bash
-./run.sh legacy      # Original mapping/scraping interface
-./run.sh dossier     # Standalone dossier generator
+./run.sh dossier
 ```
+This launches the dedicated AI-powered dossier generator interface.
 
 ## 🛠️ Core Features
 
@@ -54,17 +58,31 @@ This launches the main OSINT Toolkit with all tools integrated in one interface.
 
 ```
 OSINT/
-├── main.py              # 🏠 Unified application entry point
-├── dossier_ui.py        # 📋 Standalone dossier generator
-├── dossier_generator.py # 🤖 Core AI dossier generation logic
-├── cli_dossier.py       # 💻 Command-line dossier tool
-├── mapStructure.py      # 🗺️ Website mapping functionality
-├── scrape.py            # 📄 High-speed content scraping functionality
-├── run.sh              # 🚀 Unified launcher script
-├── requirements.txt    # 📦 Python dependencies
-├── .env.example        # ⚙️ Configuration template
-├── tests/              # 🧪 Test suite
-└── dossiers/           # 📊 Generated intelligence reports
+├── src/                          # 📦 Source code
+│   └── osint_toolkit/           # 🏠 Main package
+│       ├── core/                # ⚙️ Core business logic
+│       │   ├── mapper.py        # 🗺️ Website mapping engine
+│       │   ├── scraper.py       # 📄 Content scraping engine
+│       │   └── dossier.py       # 🤖 AI-powered dossier generation
+│       ├── ui/                  # 🎨 User interfaces
+│       │   ├── main_app.py      # 🏠 Main Streamlit application
+│       │   └── dossier_app.py   # 📋 Dossier generator UI
+│       └── utils/               # 🛠️ Utility modules
+│           ├── config.py        # ⚙️ Configuration management
+│           └── setup.py         # 🔧 API setup utilities
+├── scripts/                     # 💻 Standalone scripts
+│   └── cli_dossier.py          # 💻 Command-line dossier tool
+├── tests/                       # 🧪 Test suite
+├── config/                      # ⚙️ Configuration files
+├── docs/                        # 📚 Documentation
+│   └── ARCHITECTURE.md         # 🏗️ Architecture guide
+├── dossiers/                    # � Generated intelligence reports (git-ignored)
+├── downloads/                   # 📥 Scraped content storage
+├── app.py                       # 🚀 Main application entry point
+├── dossier_app.py              # 📋 Dossier app entry point
+├── run.sh                       # 🚀 Unified launcher script
+├── requirements.txt            # 📦 Python dependencies
+└── .env.example                # ⚙️ Configuration template
 ```
 
 ## ⚙️ Installation & Setup

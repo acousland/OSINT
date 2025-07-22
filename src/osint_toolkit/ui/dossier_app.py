@@ -2,7 +2,8 @@ import streamlit as st
 import os
 import json
 from pathlib import Path
-from dossier_generator import DossierGenerator, CompanyDossier
+from osint_toolkit.core.dossier import DossierGenerator, CompanyDossier
+from osint_toolkit.utils.config import config
 import time
 
 # Load environment variables
