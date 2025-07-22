@@ -7,7 +7,7 @@ PyPDF2
 sentence-transformers
 scikit-learn
 numpy
-openai
+openai>=1.0.0
 python-dotenv
 aiohttp
 aiofiles

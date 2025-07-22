@@ -2,17 +2,30 @@
 
 ## Quick Start (UI Only)
 
-The OSINT Toolkit is designed for interactive use through Streamlit web interfaces. All functionality is accessible through two main applications:
+The OSINT Toolkit is designed for interactive use through Streamlit web interfaces. Choose from three specialized applications:
 
-### 🚀 Main Application
+### ⚡ Streamlined Pipeline (Default)
 ```bash
 ./run.sh
+```
+**Complete in-memory workflow:**
+- Map website structure
+- Scrape all content
+- Generate AI dossier
+- Download final results only
+- No temporary files
+- Fastest processing
+
+### 🚀 Classic Application
+```bash
+./run.sh classic
 ```
 **Features:**
 - Website mapping and structure discovery
 - High-speed content scraping
 - Real-time progress tracking
 - Interactive result exploration
+- File-based workflow
 
 ### 📋 Dossier Generator
 ```bash
@@ -24,11 +37,20 @@ The OSINT Toolkit is designed for interactive use through Streamlit web interfac
 - Multi-format document processing (PDF + HTML)
 - JSON and HTML export options
 
-## Typical Workflow
+## Typical Workflows
 
-1. **Map a website** using the main application to discover structure
-2. **Scrape content** to download HTML pages and PDFs
-3. **Generate dossier** using the collected content for AI analysis
+### Fast Intelligence Gathering (Default)
+1. **Launch streamlined app**: `./run.sh`
+2. **Enter target URL** and company name
+3. **Configure settings** (optional - defaults work well)
+4. **Run complete analysis** - all phases automatic
+5. **Download results** - JSON and HTML reports
+
+### Manual Step-by-Step (Classic)
+1. **Launch classic app**: `./run.sh classic`
+2. **Map a website** using the application to discover structure
+3. **Scrape content** to download HTML pages and PDFs
+4. **Generate dossier** using the collected content for AI analysis
 
 ## Configuration
 

@@ -29,7 +29,7 @@ from bs4 import BeautifulSoup
 import lxml
 
 # AI/LLM integration (you can adapt this to your preferred provider)
-import openai  # or any other LLM provider
+from openai import OpenAI
 
 @dataclass
 class DocumentChunk:
@@ -833,11 +833,7 @@ class DossierGenerator:
             return "[ERROR: No API key configured. Please set OPENAI_API_KEY in your .env file]"
         
         try:
-            # Set the API key
-            openai.api_key = api_key
-            
-            # Call OpenAI API (using the newer client format)
-            from openai import OpenAI
+            # Use the new OpenAI client
             client = OpenAI(api_key=api_key)
             
             response = client.chat.completions.create(
@@ -848,20 +844,6 @@ class DossierGenerator:
             )
             
             return response.choices[0].message.content
-            
-        except ImportError:
-            # Fallback for older OpenAI library versions
-            try:
-                openai.api_key = api_key
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=max_tokens,
-                    temperature=0.7
-                )
-                return response.choices[0].message.content
-            except Exception as e:
-                return f"[ERROR: OpenAI API call failed: {str(e)}]"
                 
         except Exception as e:
             error_msg = str(e)

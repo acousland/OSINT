@@ -22,8 +22,12 @@ case "$1" in
         echo "📋 Starting AI-Powered Dossier Generator..."
         streamlit run dossier_app.py
         ;;
-    *)
-        echo "🚀 Starting OSINT Toolkit (Main Application)..."
+    "classic"|"main")
+        echo "🚀 Starting OSINT Toolkit (Classic Application)..."
         streamlit run app.py
+        ;;
+    *)
+        echo "⚡ Starting Streamlined OSINT Pipeline (In-Memory) - Default..."
+        streamlit run streamlined_app.py
         ;;
 esac

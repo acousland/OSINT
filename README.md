@@ -8,11 +8,20 @@ A comprehensive Open Source Intelligence (OSINT)       └── utils/         
 
 ## 🚀 Quick Start
 
-### Main Application
+### Streamlined Pipeline (Default)
 ```bash
 ./run.sh
 ```
-This launches the main OSINT Toolkit with all tools integrated in one interface.
+**All-in-one in-memory workflow:** Map → Scrape → Analyze → Download Results
+- No file system clutter
+- Faster processing
+- Download only final results
+
+### Classic Application
+```bash
+./run.sh classic
+```
+This launches the traditional OSINT Toolkit with file-based workflow.
 
 ### Dossier Generator
 ```bash
