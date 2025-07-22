@@ -1,6 +1,12 @@
 # OSINT Toolkit
 
-A comprehensive Open Source Intelligence (OSINT)       └── utils/               # 🛠️ Utility modules
+A comprehensive Open Source Intelligence (OSINT)   │           └── setup.py         # 🔧 API setup utilities
+├── tests/                       # 🧪 Test suite
+├── docs/                        # 📚 Documentation
+│   ├── ARCHITECTURE.md         # 🏗️ Architecture guide
+│   └── USAGE.md                # 📖 Usage documentation
+├── streamlined_app.py          # ⚡ Main application entry pointts/                       # 🧪 Test suite
+├── docs/                        # 📚 Documentation├── dossiers/                    # 📋 Generated intelligence reports (git-ignored)─ utils/               # 🛠️ Utility modules
            ├── config.py        # ⚙️ Configuration management
            └── setup.py         # 🔧 API setup utilities
 ├── tests/                       # 🧪 Test suite
@@ -8,26 +14,14 @@ A comprehensive Open Source Intelligence (OSINT)       └── utils/         
 
 ## 🚀 Quick Start
 
-### Streamlined Pipeline (Default)
+### Streamlined Pipeline
 ```bash
 ./run.sh
 ```
 **All-in-one in-memory workflow:** Map → Scrape → Analyze → Download Results
 - No file system clutter
-- Faster processing
+- Faster processing  
 - Download only final results
-
-### Classic Application
-```bash
-./run.sh classic
-```
-This launches the traditional OSINT Toolkit with file-based workflow.
-
-### Dossier Generator
-```bash
-./run.sh dossier
-```
-This launches the dedicated AI-powered dossier generator interface.
 
 ## 🛠️ Core Features
 
@@ -70,26 +64,21 @@ OSINT/
 ├── src/                          # 📦 Source code
 │   └── osint_toolkit/           # 🏠 Main package
 │       ├── core/                # ⚙️ Core business logic
-│       │   ├── mapper.py        # 🗺️ Website mapping engine
-│       │   ├── scraper.py       # 📄 Content scraping engine
-│       │   └── dossier.py       # 🤖 AI-powered dossier generation
+│       │   ├── in_memory_mapper.py     # 🗺️ In-memory website mapping
+│       │   ├── in_memory_scraper.py    # 📄 In-memory content scraping
+│       │   └── in_memory_dossier.py    # 🤖 In-memory dossier generation
 │       ├── ui/                  # 🎨 User interfaces
-│       │   ├── main_app.py      # 🏠 Main Streamlit application
-│       │   └── dossier_app.py   # 📋 Dossier generator UI
+│       │   └── streamlined_app.py      # ⚡ Streamlined application UI
 │       └── utils/               # 🛠️ Utility modules
 │           ├── config.py        # ⚙️ Configuration management
 │           └── setup.py         # 🔧 API setup utilities
-├── scripts/                     # 💻 Standalone scripts
-│   └── cli_dossier.py          # 💻 Command-line dossier tool
 ├── tests/                       # 🧪 Test suite
-├── config/                      # ⚙️ Configuration files
 ├── docs/                        # 📚 Documentation
 │   └── ARCHITECTURE.md         # 🏗️ Architecture guide
 ├── dossiers/                    # � Generated intelligence reports (git-ignored)
 ├── downloads/                   # 📥 Scraped content storage
-├── app.py                       # 🚀 Main application entry point
-├── dossier_app.py              # 📋 Dossier app entry point
-├── run.sh                       # 🚀 Unified launcher script
+├── streamlined_app.py          # ⚡ Main application entry point
+├── run.sh                       # 🚀 Application launcher script
 ├── requirements.txt            # 📦 Python dependencies
 └── .env.example                # ⚙️ Configuration template
 ```
@@ -143,47 +132,24 @@ cp .env.example .env
 # Edit .env file with your API keys
 ```
 
-## 💻 Usage Options
+## 💻 Usage
 
-### 🏠 Unified Interface (Recommended)
+### 🚀 Launch the Streamlined Pipeline
 ```bash
 ./run.sh
 ```
-- Navigate between all tools in one application
-- Integrated workflow from mapping to dossier generation
-- Modern, intuitive interface
 
-### 🗺️ Legacy Tools
-```bash
-./run.sh legacy    # Original mapping/scraping interface
-./run.sh mapping   # Direct to mapping tool
-./run.sh scraping  # Direct to scraping tool
-```
-
-### 📋 Dossier Tools
-```bash
-./run.sh dossier   # Standalone dossier generator UI
-
-# Command-line dossier generation:
-python cli_dossier.py --company-domain www.example.com
-python cli_dossier.py --pdf-directory /path/to/pdfs --company-name "Company Name"
-```
+The application will start and provide:
+- **Interactive interface** for URL input and configuration
+- **Real-time progress tracking** during all phases
+- **Download options** for final JSON and HTML reports
 
 ## 📊 Output Structure
 
-### Generated Files
-```
-OSINT/
-├── downloads/           # Scraped content
-│   └── www.company.com/
-│       ├── visited_urls.txt
-│       ├── html_pages/  # Downloaded HTML content
-│       └── pdfs/        # Downloaded PDF files
-├── dossiers/           # Generated intelligence reports
-│   ├── company_dossier.json
-│   └── company_dossier.html
-└── logs/               # Application logs
-```
+### Generated Reports
+The streamlined pipeline generates intelligence reports that are downloaded directly:
+- **`company_dossier.json`** - Structured data for further processing
+- **`company_dossier.html`** - Formatted report for presentation
 
 ### Dossier Report Sections
 - **Executive Summary**: High-level company overview
@@ -260,88 +226,68 @@ sc.scrape("https://example.com")
 - **📊 Real-time Metrics**: Tracks URLs/second, total time, and progress
 - **🎯 Smart Discovery**: Recursively finds all internal links up to specified depth
 - **🤖 Respectful Crawling**: Configurable delays and user agent rotation
-- **💾 Efficient Storage**: Batch writes for better I/O performance
+- **💾 In-Memory Processing**: No file I/O overhead for optimal performance
 
-### 2. High-Speed Content Scraping (`scrape.py`)
+### 🔧 In-Memory Content Processing
 
-- **🚀 Async Architecture**: Uses aiohttp and asyncio for concurrent processing
-- **📄 Multi-format Support**: Downloads HTML pages, PDF files, and extracts metadata
-- **⚡ Speed Modes**: 
-  - `fast_scrape()`: 30 concurrent requests (recommended)
-  - `turbo_scrape()`: 50 concurrent requests (aggressive)
-  - `scrape()`: Custom concurrent settings
-- **📊 Performance Tracking**: Real-time metrics and download statistics
-- **🛡️ Error Handling**: Robust async error management and retry logic
-- **💾 Smart Organization**: Separate folders for HTML content and PDF files
+- **⚡ Zero File I/O**: All processing done in memory for maximum speed
+- **📄 Multi-format Support**: HTML pages and PDF documents processed directly
+- **🧠 Intelligent Chunking**: Semantic text processing for AI analysis
+- **📊 Real-time Progress**: Live updates during all pipeline stages
+- **� Streamlined Workflow**: Map → Scrape → Analyze → Download in one session
 
-### Output Structure
+## ⚙️ Configuration
 
-```
-downloads/
-└── domain.com/
-    ├── visited_urls.txt    # List of all discovered URLs
-    ├── html_pages/         # Downloaded HTML content
-    │   ├── page1.html
-    │   ├── page1_metadata.json
-    │   └── index.html
-    └── pdfs/              # Direct PDF downloads
-        ├── document.pdf
-        └── report.pdf
+The streamlined pipeline uses environment variables for configuration:
+
+```bash
+# Copy .env.example to .env and configure:
+OPENAI_API_KEY=your_openai_api_key_here
+CHUNK_SIZE=1000
+CHUNK_OVERLAP=200
+MAX_CONTEXT_TOKENS=4000
+MAX_CLUSTERS=8
 ```
 
-## Configuration
+## 🛠️ Dependencies
 
-### Key Parameters
+Core dependencies for the streamlined pipeline:
+- `streamlit`: Modern web interface
+- `openai`: AI-powered analysis (or alternative LLM providers)
+- `aiohttp`: Async HTTP client for high-speed requests
+- `beautifulsoup4`: HTML parsing and content extraction
+- `pypdf`: PDF text extraction
+- `fake_useragent`: User agent rotation
 
-- **START_URL**: The initial URL to begin crawling
-- **MAX_DEPTH**: Maximum depth for recursive crawling (default: 1000)
-- **MAX_WORKERS**: Number of concurrent threads for PDF downloading (default: 10)
-
-### Customization
-
-You can modify the following in the source files:
-
-- **User Agents**: The tool uses `fake_useragent` library for rotation
-- **Request Headers**: Customize in the download functions
-- **File Naming**: Modify the filename generation logic in `scrape.py`
-- **Crawling Rules**: Adjust the `is_internal_link()` function for different crawling behaviors
-
-## Dependencies
-
-- `streamlit`: Web interface framework
-- `fake_useragent`: User agent rotation for web requests
-- `lxml`: HTML parsing and link extraction
-- `requests`: HTTP client for web requests
-- `pdfkit`: Python wrapper for wkhtmltopdf
-
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **"wkhtmltopdf not found"**
-   - Ensure wkhtmltopdf is installed and in your system PATH
-   - On macOS: `brew install wkhtmltopdf`
+1. **"OpenAI API Key not found"**
+   - Ensure you've copied `.env.example` to `.env`
+   - Add your OpenAI API key to the `.env` file
 
-2. **Permission Errors**
-   - Check write permissions in the downloads directory
-   - Run with appropriate user permissions
+2. **Memory Issues with Large Websites**
+   - Reduce crawling depth in the web interface
+   - Process fewer documents at once
+   - Monitor system memory usage
 
 3. **SSL Certificate Errors**
-   - Some sites may have SSL issues; the tool handles these gracefully
+   - The tool handles SSL issues gracefully
    - Check console output for specific error messages
 
-4. **Memory Issues with Large Sites**
-   - Reduce MAX_DEPTH for very large websites
-   - Monitor system resources during operation
+4. **Rate Limiting**
+   - Reduce concurrent request settings if needed
+   - Use respectful crawling delays
 
 ### Performance Tips
 
-- Start with smaller MAX_DEPTH values for initial testing
-- Use the web interface for better progress tracking
-- Monitor disk space when scraping large websites
-- Consider the target website's robots.txt and rate limiting
+- Start with smaller crawling depths for testing
+- Use the web interface for real-time progress monitoring
+- The in-memory approach is significantly faster than file-based alternatives
+- Results are only saved when you download them
 
-## Legal and Ethical Considerations
+## 🔒 Legal and Ethical Considerations
 
 - Always respect robots.txt files
 - Be mindful of website terms of service
@@ -349,10 +295,10 @@ You can modify the following in the source files:
 - Only scrape websites you have permission to access
 - This tool is intended for legitimate security research and OSINT purposes
 
-## Contributing
+## 🤝 Contributing
 
 Feel free to submit issues, feature requests, or pull requests to improve this tool.
 
-## License
+## 📄 License
 
 See LICENSE file for details.

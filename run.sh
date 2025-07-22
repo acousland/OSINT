@@ -16,18 +16,6 @@ if [ -f "requirements.txt" ]; then
     pip install -r requirements.txt
 fi
 
-# Check command line argument for which app to run
-case "$1" in
-    "dossier")
-        echo "📋 Starting AI-Powered Dossier Generator..."
-        streamlit run dossier_app.py
-        ;;
-    "classic"|"main")
-        echo "🚀 Starting OSINT Toolkit (Classic Application)..."
-        streamlit run app.py
-        ;;
-    *)
-        echo "⚡ Starting Streamlined OSINT Pipeline (In-Memory) - Default..."
-        streamlit run streamlined_app.py
-        ;;
-esac
+# Start the Streamlined OSINT Pipeline
+echo "⚡ Starting Streamlined OSINT Pipeline (In-Memory)..."
+streamlit run streamlined_app.py

@@ -16,14 +16,13 @@ Main Components:
 __version__ = "1.0.0"
 __author__ = "OSINT Toolkit Team"
 
-# Core exports
-from .core.mapper import HighSpeedWebMapper
-from .core.scraper import HighSpeedScraper  
-from .core.dossier import DossierGenerator, CompanyDossier
+# Core exports - In-Memory Pipeline
+from .core.in_memory_mapper import InMemoryWebMapper
+from .core.in_memory_scraper import InMemoryScraper  
+from .core.in_memory_dossier import InMemoryDossierGenerator
 
 __all__ = [
-    "HighSpeedWebMapper",
-    "HighSpeedScraper", 
-    "DossierGenerator",
-    "CompanyDossier"
+    "InMemoryWebMapper",
+    "InMemoryScraper", 
+    "InMemoryDossierGenerator"
 ]
