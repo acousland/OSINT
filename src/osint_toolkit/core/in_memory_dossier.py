@@ -28,6 +28,9 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
+# Import global configuration
+from osint_toolkit.utils.config import config
+
 load_dotenv()
 
 @dataclass
@@ -306,7 +309,7 @@ class InMemoryDossierGenerator:
             if progress_callback:
                 progress_callback(f"Generating section {i+1}/{total_sections}: {section_title}")
             
-            section_content = await self._generate_section(section_title, context_summary, company_name)
+            section_content = await self._generate_section(section_title, context_summary, company_name, progress_callback)
             results[section_key] = section_content
         
         return results
@@ -326,7 +329,7 @@ class InMemoryDossierGenerator:
         
         return "\n\n".join(summaries)
     
-    async def _generate_section(self, section_title: str, context: str, company_name: str) -> str:
+    async def _generate_section(self, section_title: str, context: str, company_name: str, progress_callback: Optional[callable]) -> str:
         """Generate a specific section using AI"""
         
         prompt = f"""
@@ -354,16 +357,71 @@ SECTION: {section_title}
             
             client = OpenAI(api_key=api_key)
             
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
+            # Determine model: environment variable (OPENAI_MODEL) or config default
+            model_name = os.getenv("OPENAI_MODEL") or getattr(config, "OPENAI_MODEL", "gpt-5-nano")
+
+            # If using GPT-5 family, prefer Responses API with reasoning controls
+            if model_name.startswith("gpt-5"):
+                try:
+                    responses_kwargs = {
+                        "model": model_name,
+                        "input": prompt,
+                        # Minimal reasoning for speed; can be adjusted via env
+                        "reasoning": {"effort": os.getenv("OPENAI_REASONING_EFFORT", "minimal")},
+                    }
+                    verbosity = os.getenv("OPENAI_VERBOSITY")
+                    if verbosity:
+                        responses_kwargs["text"] = {"verbosity": verbosity}
+                    # Optional max tokens control (new param name in GPT-5 stack)
+                    max_comp = os.getenv("OPENAI_MAX_COMPLETION_TOKENS")
+                    if max_comp:
+                        responses_kwargs["max_output_tokens"] = int(max_comp)
+                    resp = client.responses.create(**responses_kwargs)
+
+                    # Robust extraction of text from Responses API output
+                    try:
+                        # New style: resp.output is a list of objects with .content
+                        parts = []
+                        output = getattr(resp, "output", []) or []
+                        for item in output:
+                            content_list = getattr(item, "content", [])
+                            for c in content_list:
+                                ctype = getattr(c, "type", None)
+                                if ctype in ("output_text", "text"):
+                                    text_obj = getattr(c, "text", None)
+                                    if isinstance(text_obj, str):
+                                        parts.append(text_obj)
+                                    else:
+                                        value = getattr(text_obj, "value", None)
+                                        if value:
+                                            parts.append(value)
+                        if parts:
+                            return "\n".join(parts).strip()
+                        # Fallback: maybe top-level content
+                        fallback_text = getattr(resp, "content", None)
+                        if isinstance(fallback_text, str):
+                            return fallback_text.strip()
+                        # Last resort: repr
+                        return str(resp)
+                    except Exception as parse_err:
+                        return f"Error parsing GPT-5 response: {parse_err}"
+                except Exception as gpt5_err:
+                    # Fallback to legacy chat if Responses API fails
+                    pass  # Will attempt legacy path below
+
+            # Legacy / non GPT-5 path via Chat Completions (remove unsupported params for GPT-5 models)
+            chat_kwargs = {
+                "model": model_name,
+                "messages": [
                     {"role": "system", "content": "You are a business intelligence analyst creating detailed company dossiers."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=800,
-                temperature=0.3
-            )
-            
+            }
+            # Only include completion/temperature style params if not GPT-5 nano (which rejects them)
+            if not model_name.startswith("gpt-5"):
+                chat_kwargs["max_completion_tokens"] = 800
+                chat_kwargs["temperature"] = 0.3
+            response = client.chat.completions.create(**chat_kwargs)
             return response.choices[0].message.content.strip()
             
         except Exception as e:
