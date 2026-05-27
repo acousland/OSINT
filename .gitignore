@@ -167,3 +167,6 @@ DerivedData/
 .swiftpm/
 *.xcuserstate
 dist/
+
+# macOS
+.DS_Store

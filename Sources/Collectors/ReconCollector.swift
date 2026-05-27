@@ -117,10 +117,10 @@ struct ReconCollector {
         let found = await withTaskGroup(of: String?.self) { group -> [String] in
             for word in words {
                 group.addTask {
-                    await self.resolveLimiter.acquire()
-                    defer { Task { await self.resolveLimiter.release() } }
-                    let candidate = "\(word).\(apex)"
-                    return await self.doh.resolves(candidate) ? candidate : nil
+                    await self.resolveLimiter.withPermit {
+                        let candidate = "\(word).\(apex)"
+                        return await self.doh.resolves(candidate) ? candidate : nil
+                    }
                 }
             }
             var hits: [String] = []
@@ -146,9 +146,9 @@ struct ReconCollector {
         let open = await withTaskGroup(of: Int?.self) { group -> [Int] in
             for port in ports {
                 group.addTask {
-                    await self.scanLimiter.acquire()
-                    defer { Task { await self.scanLimiter.release() } }
-                    return await scanner.probe(host: host, port: port) ? port : nil
+                    await self.scanLimiter.withPermit {
+                        await scanner.probe(host: host, port: port) ? port : nil
+                    }
                 }
             }
             var hits: [Int] = []

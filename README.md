@@ -1,195 +1,90 @@
-# OSINT Web Scraper & PDF Downloader
+# OSIntel
 
-A comprehensive Open Source Intelligence (OSINT) tool for website mapping, URL discovery, and automated PDF generation/downloading. This application provides both command-line and web interface options for crawling websites and extracting information.
+A native macOS corporate-intelligence app for enterprise-architecture consulting. Point it
+at an organisation and it builds a picture of both the **business** and the **technology
+landscape**, then synthesises a consulting-grade briefing — including PESTLE, SWOT, and EA
+engagement opportunities — that you can take into a meeting.
 
-## Features
+Built in Swift + SwiftUI. Single-user, runs entirely on your Mac.
 
-- **Website Mapping**: Recursively crawl websites to discover all internal links
-- **PDF Generation**: Convert web pages to PDF format for offline analysis
-- **PDF Download**: Automatically download existing PDF files from discovered URLs
-- **Streamlit Web UI**: User-friendly web interface for easy operation
-- **Concurrent Processing**: Multi-threaded PDF downloading for improved performance
-- **Organized Output**: Automatic folder structure creation based on domain names
+> ⚠️ **Authorised use only.** The active-reconnaissance features (port scanning, subdomain
+> brute force) send direct probes to the target and are gated behind an explicit consent
+> prompt. Only run them against assets you are authorised to test.
 
-## Installation
+## Download
 
-### Prerequisites
+Grab the latest build from the [Releases page](https://github.com/acousland/OSINT/releases/latest):
 
-- Python 3.7+
-- wkhtmltopdf (required for PDF generation)
+- **`OSIntel-Installer.dmg`** — open it and drag **OSIntel** onto **Applications**.
+- `OSIntel-macos.zip` — the plain app bundle, for scripting.
 
-### Install wkhtmltopdf
-
-**macOS:**
-```bash
-brew install wkhtmltopdf
-```
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install wkhtmltopdf
-```
-
-**Windows:**
-Download from: https://wkhtmltopdf.org/downloads.html
-
-### Python Dependencies
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd OSINT
-```
-
-2. Install required packages:
-```bash
-pip install -r requirements.txt
-```
-
-## Usage
-
-### Web Interface (Recommended)
-
-Launch the Streamlit web interface:
+The build is **ad-hoc signed (not notarized)**, so the first launch is blocked by Gatekeeper.
+Right-click the app → **Open**, or clear the quarantine flag once:
 
 ```bash
-streamlit run app.py
+xattr -dr com.apple.quarantine /Applications/OSIntel.app
 ```
 
-This will open a web browser with an intuitive interface where you can:
-- Enter the target URL
-- Set the maximum crawling depth
-- Run mapping and scraping operations with visual progress indicators
-- View the location where files are saved
+## What it does
 
-### Command Line Interface
+| Domain | Collected |
+|---|---|
+| **Corporate identity** | Australian Business Register (ABN/ACN lookup, name search) |
+| **Web contents** | Same-domain crawl, page body text, document harvest (PDF/XLSX/DOCX), page→PDF rendering |
+| **Technology / recon** | DNS, certificate-transparency subdomains, technology fingerprinting (passive); subdomain brute force, TCP-connect port scanning (active, consent-gated) |
+| **Synthesis** | OpenAI-backed executive dossier (PESTLE + SWOT + EA opportunities) and RAG Q&A over everything collected, with source citations |
 
-#### Basic Usage
+Every collected fact links back to a source record for provenance. Findings are organised
+into an **Entity graph** and a **Timeline**, and exportable as PDF / Markdown / JSON.
 
-Edit the `OSintel.py` file to set your target URL and parameters:
+## Setup
 
-```python
-START_URL = "https://example.com"
-MAX_DEPTH = 1000
+After installing, open **Settings (⌘,)** and add:
 
-ms.map(START_URL, MAX_DEPTH)  # Map the website
-sc.scrape(START_URL)          # Download/generate PDFs
-```
+- **ABR auth GUID** — free, [register here](https://abr.business.gov.au/Tools/WebServices).
+- **OpenAI API key** — for the dossier and Q&A.
 
-Then run:
+Both are stored in the macOS Keychain, never on disk or in the database. Then create an
+investigation, choose what to collect on the **Run** tab, and go.
+
+## Building from source
+
+Requires Xcode, [XcodeGen](https://github.com/yonaskolb/XcodeGen), and
+[create-dmg](https://github.com/create-dmg/create-dmg) (for the installer).
+
 ```bash
-python OSintel.py
+brew install xcodegen create-dmg
+
+# Generate the Xcode project (it is git-ignored; project.yml is the source of truth)
+xcodegen generate
+
+# Build + install to /Applications
+./install.sh            # Release; use --debug for a debug build
+
+# Build the drag-to-Applications DMG
+./make_dmg.sh
+
+# Build, package, and publish the rolling "latest" GitHub release
+./release.sh
 ```
 
-#### Individual Components
+To open in Xcode directly: `xcodegen generate && open OSIntel.xcodeproj`.
 
-**Map a website only:**
-```python
-import mapStructure as ms
-ms.map("https://example.com", max_depth=100)
-```
+## Architecture
 
-**Scrape PDFs only (requires existing mapping):**
-```python
-import scrape as sc
-sc.scrape("https://example.com")
-```
+Five layers in one sandboxed process, communicating via Swift concurrency. See
+[`docs/REWRITE_PLAN.md`](docs/REWRITE_PLAN.md) for the design and
+[`CLAUDE.md`](CLAUDE.md) for a contributor's map of the codebase.
 
-## How It Works
+- **UI** (`Sources/UI`, `Sources/App`) — SwiftUI `NavigationSplitView`; `AppState` drives runs.
+- **Coordinator** (`Sources/Core`) — an actor sequencing collectors, enforcing the
+  passive/active gate, streaming progress.
+- **Collectors** (`Sources/Collectors`) — ABR, web crawl/PDF/docs, recon (DNS/CT/ports/
+  fingerprint), and OpenAI synthesis + RAG.
+- **Store** (`Sources/Storage`) — a GRDB-backed actor; single serialized write path.
 
-### 1. Website Mapping (`mapStructure.py`)
+## Licence & notices
 
-- Starts from a given URL and recursively discovers all internal links
-- Respects the specified maximum depth to prevent infinite crawling
-- Uses fake user agents to avoid basic bot detection
-- Saves all discovered URLs to `visited_urls.txt`
-- Only processes internal links (same domain)
-
-### 2. PDF Scraping (`scrape.py`)
-
-- Reads the list of URLs from the mapping phase
-- For each URL:
-  - If it's already a PDF file: downloads it directly
-  - If it's a web page: converts it to PDF using wkhtmltopdf
-- Uses multi-threading (up to 10 concurrent workers) for faster processing
-- Handles errors gracefully and continues with remaining URLs
-
-### Output Structure
-
-```
-downloads/
-└── domain.com/
-    ├── visited_urls.txt    # List of all discovered URLs
-    └── pdfs/              # Generated and downloaded PDFs
-        ├── page1.pdf
-        ├── document.pdf
-        └── index.pdf
-```
-
-## Configuration
-
-### Key Parameters
-
-- **START_URL**: The initial URL to begin crawling
-- **MAX_DEPTH**: Maximum depth for recursive crawling (default: 1000)
-- **MAX_WORKERS**: Number of concurrent threads for PDF downloading (default: 10)
-
-### Customization
-
-You can modify the following in the source files:
-
-- **User Agents**: The tool uses `fake_useragent` library for rotation
-- **Request Headers**: Customize in the download functions
-- **File Naming**: Modify the filename generation logic in `scrape.py`
-- **Crawling Rules**: Adjust the `is_internal_link()` function for different crawling behaviors
-
-## Dependencies
-
-- `streamlit`: Web interface framework
-- `fake_useragent`: User agent rotation for web requests
-- `lxml`: HTML parsing and link extraction
-- `requests`: HTTP client for web requests
-- `pdfkit`: Python wrapper for wkhtmltopdf
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"wkhtmltopdf not found"**
-   - Ensure wkhtmltopdf is installed and in your system PATH
-   - On macOS: `brew install wkhtmltopdf`
-
-2. **Permission Errors**
-   - Check write permissions in the downloads directory
-   - Run with appropriate user permissions
-
-3. **SSL Certificate Errors**
-   - Some sites may have SSL issues; the tool handles these gracefully
-   - Check console output for specific error messages
-
-4. **Memory Issues with Large Sites**
-   - Reduce MAX_DEPTH for very large websites
-   - Monitor system resources during operation
-
-### Performance Tips
-
-- Start with smaller MAX_DEPTH values for initial testing
-- Use the web interface for better progress tracking
-- Monitor disk space when scraping large websites
-- Consider the target website's robots.txt and rate limiting
-
-## Legal and Ethical Considerations
-
-- Always respect robots.txt files
-- Be mindful of website terms of service
-- Use reasonable delays to avoid overwhelming target servers
-- Only scrape websites you have permission to access
-- This tool is intended for legitimate security research and OSINT purposes
-
-## Contributing
-
-Feel free to submit issues, feature requests, or pull requests to improve this tool.
-
-## License
-
-See LICENSE file for details.
+See [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). Note the
+bundled technology-fingerprint ruleset path carries **GPL-3.0** obligations if the full
+dataset is embedded.

@@ -12,8 +12,8 @@ Python crawler. It collects across three domains plus a synthesis layer:
    fingerprinting (passive); subdomain brute force, TCP-connect port scan (active, gated).
 4. **Synthesis** — OpenAI-backed executive dossier + RAG Q&A over collected text.
 
-The legacy Python files (`mapStructure.py`, `scrape.py`, `app.py`, `OSintel.py`) are
-**superseded** by the Swift app and kept only for reference. See `docs/REWRITE_PLAN.md`.
+This was rewritten from an earlier Python crawler; see `docs/REWRITE_PLAN.md` for the
+design history.
 
 ## Commands
 
@@ -46,9 +46,8 @@ Five layers in one sandboxed process, communicating via Swift concurrency:
   true** (set via the `ConsentSheet`).
 - **Collectors** (`Sources/Collectors`) — `ABRCollector`, `WebCollector`,
   `ReconCollector`, `SynthesisEngine`, plus helpers (`PDFRenderer`, `DocumentExtractor`,
-  `Fingerprinter`, `PortScanner`, `DoHClient`, `WaybackClient`, `OpenAIClient`). Each
-  conforms to `PassiveCollector` or `ActiveCollector` (marker protocols in
-  `Sources/Core/RunEvent.swift`).
+  `Fingerprinter`, `PortScanner`, `DoHClient`, `OpenAIClient`). Each conforms to
+  `PassiveCollector` or `ActiveCollector` (marker protocols in `Sources/Core/RunEvent.swift`).
 - **Store** (`Sources/Storage`) — an `actor` wrapping a GRDB `DatabaseQueue`; single
   serialized write path. Schema + migrations in `Database.swift`, records in
   `Sources/Models/Models.swift`. **Every fact/record references a `Source` row** for

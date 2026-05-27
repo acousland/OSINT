@@ -162,7 +162,7 @@ struct WebCollector: PassiveCollector {
     private func processPage(_ urlStr: String, domain: String) async -> PageOutcome {
         guard let url = URL(string: urlStr) else { return .empty(urlStr) }
         guard let (data, status) = try? await http.get(url) else { return .empty(urlStr) }
-        let contentType = (try? await http.contentType(url)) ?? nil
+        let contentType = await http.contentType(url)
 
         // Document link → queue for harvest, don't parse as HTML.
         if DocumentExtractor.documentType(for: urlStr, contentType: contentType) != nil {
@@ -210,7 +210,7 @@ struct WebCollector: PassiveCollector {
         guard let url = URL(string: urlStr),
               let (data, status) = try? await http.get(url), (200..<300).contains(status)
         else { return false }
-        let ctype = (try? await http.contentType(url)) ?? nil
+        let ctype = await http.contentType(url)
         guard let type = DocumentExtractor.documentType(for: urlStr, contentType: ctype) else { return false }
 
         let extracted = DocumentExtractor.extract(data: data, type: type, filename: url.lastPathComponent)
