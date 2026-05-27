@@ -5,7 +5,8 @@ import Foundation
 struct OpenAIClient: Sendable {
     let chatModel = "gpt-4o-mini"
     /// Stronger model for the executive dossier (quality matters more than cost there).
-    let dossierModel = "gpt-4o"
+    /// NOTE: verify this matches OpenAI's current model ID / your account's access.
+    let dossierModel = "gpt-5.5"
     let embeddingModel = "text-embedding-3-small"
     private let base = URL(string: "https://api.openai.com/v1")!
 
@@ -33,15 +34,17 @@ struct OpenAIClient: Sendable {
         let choices: [Choice]
     }
 
-    func chat(system: String, user: String, model: String? = nil) async throws -> String {
-        let body: [String: Any] = [
+    /// - Parameter temperature: pass nil to omit (newer models accept only the default).
+    func chat(system: String, user: String, model: String? = nil,
+              temperature: Double? = 0.2) async throws -> String {
+        var body: [String: Any] = [
             "model": model ?? chatModel,
             "messages": [
                 ["role": "system", "content": system],
                 ["role": "user", "content": user],
             ],
-            "temperature": 0.2,
         ]
+        if let temperature { body["temperature"] = temperature }
         let req = try request("chat/completions", body: body)
         let (data, resp) = try await URLSession.shared.data(for: req)
         let status = (resp as? HTTPURLResponse)?.statusCode ?? 0

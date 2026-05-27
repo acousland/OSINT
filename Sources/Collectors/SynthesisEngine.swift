@@ -198,7 +198,7 @@ struct SynthesisEngine {
         - Keep it tight and senior — this is a briefing, not an essay.
         """
         return try await openai.chat(system: system, user: "EVIDENCE:\n\n\(evidence)",
-                                     model: openai.dossierModel)
+                                     model: openai.dossierModel, temperature: nil)
     }
 
     // MARK: Chunking
