@@ -1,6 +1,12 @@
 import Foundation
 import SwiftSoup
 
+/// Shared progress counter for the concurrent PDF render pool.
+actor RenderCounter {
+    private var count = 0
+    func increment() -> Int { count += 1; return count }
+}
+
 /// Recursive same-domain crawler + document harvester + page→PDF renderer. Replaces the
 /// Python map/scrape pair, but unified: one pass discovers pages, harvests documents, and
 /// (optionally) renders pages to PDF. Polite (rate-limited, identifiable UA, bounded fan-out).
@@ -14,7 +20,7 @@ struct WebCollector: PassiveCollector {
     private let fetchLimiter = ConcurrencyLimiter(limit: 6)
 
     func run(rootURL: String, maxDepth: Int, renderPDFs: Bool, harvestDocs: Bool,
-             emit: @Sendable (RunEvent) -> Void) async throws -> String {
+             emit: @escaping @Sendable (RunEvent) -> Void) async throws -> String {
         guard let root = normalizedURL(rootURL), let domain = root.host else {
             throw HTTPError.invalidURL(rootURL)
         }
@@ -76,31 +82,51 @@ struct WebCollector: PassiveCollector {
             }
         }
 
-        // Render PDFs (serialized through the single off-screen web view).
+        // Render PDFs through a pool of off-screen web views. WebKit loads the pages in
+        // separate content processes, so while one render is suspended awaiting its load
+        // the others proceed — the per-page settle delays overlap instead of summing.
         var pdfCount = 0
-        if renderPDFs {
-            let renderer = await PDFRenderer()
+        if renderPDFs && !pageURLs.isEmpty {
+            let pages = Array(Set(pageURLs))
             let dir = try AppDatabase.filesDirectory(investigationId: investigationId)
-            for pageURL in Set(pageURLs) {
-                if Task.isCancelled { break }
-                guard let url = URL(string: pageURL) else { continue }
-                let outName = pdfFilename(for: url)
-                let outURL = dir.appendingPathComponent(outName)
-                do {
-                    try await renderer.render(url: url, to: outURL)
-                    let src = try await store.recordSource(Source(
-                        id: nil, investigationId: investigationId, kind: "web",
-                        ref: pageURL, collector: name, httpStatus: 200, fetchedAt: Date()))
-                    _ = try await store.insert(PdfRender(
-                        id: nil, investigationId: investigationId, url: pageURL,
-                        localPath: outURL.path, sourceId: src))
-                    pdfCount += 1
-                } catch {
-                    emit(.progress(stage: "Web", message: "PDF failed for \(url.lastPathComponent)",
-                                   done: pdfCount, total: pageURLs.count))
+            let workerCount = min(4, pages.count)
+            let total = pages.count
+            let counter = RenderCounter()
+            pdfCount = await withTaskGroup(of: Int.self) { group in
+                for w in 0..<workerCount {
+                    // Round-robin partition so each worker gets an even slice.
+                    let myPages = pages.enumerated().compactMap { $0.offset % workerCount == w ? $0.element : nil }
+                    group.addTask {
+                        let renderer = await PDFRenderer()
+                        var rendered = 0
+                        for pageURL in myPages {
+                            if Task.isCancelled { break }
+                            guard let url = URL(string: pageURL) else { continue }
+                            let outURL = dir.appendingPathComponent(self.pdfFilename(for: url))
+                            do {
+                                try await renderer.render(url: url, to: outURL)
+                                let src = try await self.store.recordSource(Source(
+                                    id: nil, investigationId: self.investigationId, kind: "web",
+                                    ref: pageURL, collector: self.name, httpStatus: 200, fetchedAt: Date()))
+                                _ = try await self.store.insert(PdfRender(
+                                    id: nil, investigationId: self.investigationId, url: pageURL,
+                                    localPath: outURL.path, sourceId: src))
+                                rendered += 1
+                                let done = await counter.increment()
+                                emit(.progress(stage: "Web", message: "Rendered \(done) PDF(s)",
+                                               done: done, total: total))
+                            } catch {
+                                let done = await counter.increment()
+                                emit(.progress(stage: "Web", message: "PDF failed/skipped: \(url.lastPathComponent)",
+                                               done: done, total: total))
+                            }
+                        }
+                        return rendered
+                    }
                 }
-                emit(.progress(stage: "Web", message: "Rendered \(pdfCount) PDF(s)",
-                               done: pdfCount, total: pageURLs.count))
+                var sum = 0
+                for await c in group { sum += c }
+                return sum
             }
         }
 
