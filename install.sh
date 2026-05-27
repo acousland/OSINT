@@ -17,6 +17,22 @@ DEST="${DEST:-/Applications}"
 APP_NAME="OSIntel.app"
 DERIVED=".build"
 
+echo "==> Stamping BuildInfo with current git commit"
+GEN="Sources/Generated/BuildInfo.swift"
+mkdir -p "$(dirname "$GEN")"
+HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+git diff --quiet 2>/dev/null || HASH="$HASH-dirty"
+VER=$(grep 'MARKETING_VERSION' project.yml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+cat > "$GEN" <<EOF
+// Generated at build time by install.sh — do not edit.
+enum BuildInfo {
+    static let version = "${VER:-1.1.0}"
+    static let commit = "$HASH"
+    static let date = "$(date +%Y-%m-%d)"
+}
+EOF
+echo "    version ${VER:-1.1.0}, commit $HASH"
+
 echo "==> Regenerating Xcode project (xcodegen)"
 if ! command -v xcodegen >/dev/null 2>&1; then
   echo "error: xcodegen not found. Install it with: brew install xcodegen" >&2

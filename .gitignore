@@ -170,3 +170,6 @@ dist/
 
 # macOS
 .DS_Store
+
+# Stamped at build time by install.sh
+Sources/Generated/

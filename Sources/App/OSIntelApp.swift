@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 @main
 struct OSIntelApp: App {
@@ -12,6 +13,18 @@ struct OSIntelApp: App {
                 .task { await state.reload() }
         }
         .commands {
+            // Custom About panel showing version + the exact git commit the build came from.
+            CommandGroup(replacing: .appInfo) {
+                Button("About OSIntel") {
+                    NSApplication.shared.orderFrontStandardAboutPanel(options: [
+                        .applicationName: "OSIntel",
+                        .applicationVersion: BuildInfo.version,
+                        .version: BuildInfo.commit,
+                        NSApplication.AboutPanelOptionKey(rawValue: "Copyright"):
+                            "Commit \(BuildInfo.commit) · built \(BuildInfo.date)",
+                    ])
+                }
+            }
             CommandGroup(after: .newItem) {
                 Button("New Investigation…") { state.showingNew = true }
                     .keyboardShortcut("n", modifiers: [.command])
