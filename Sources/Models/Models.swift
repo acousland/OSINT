@@ -94,6 +94,8 @@ struct CrawlPage: Codable, Identifiable, Hashable, FetchableRecord, MutablePersi
     var contentType: String?
     var fetchedAt: Date
     var sourceId: Int64
+    /// Visible body text (capped), used to build the business corpus for synthesis.
+    var textContent: String?
 
     static let databaseTableName = "crawl_page"
     mutating func didInsert(_ inserted: InsertionSuccess) { id = inserted.rowID }

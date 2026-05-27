@@ -4,6 +4,8 @@ import Foundation
 /// SDK dependency and version drift. API key is read from Keychain, never stored on disk.
 struct OpenAIClient: Sendable {
     let chatModel = "gpt-4o-mini"
+    /// Stronger model for the executive dossier (quality matters more than cost there).
+    let dossierModel = "gpt-4o"
     let embeddingModel = "text-embedding-3-small"
     private let base = URL(string: "https://api.openai.com/v1")!
 
@@ -31,9 +33,9 @@ struct OpenAIClient: Sendable {
         let choices: [Choice]
     }
 
-    func chat(system: String, user: String) async throws -> String {
+    func chat(system: String, user: String, model: String? = nil) async throws -> String {
         let body: [String: Any] = [
-            "model": chatModel,
+            "model": model ?? chatModel,
             "messages": [
                 ["role": "system", "content": system],
                 ["role": "user", "content": user],

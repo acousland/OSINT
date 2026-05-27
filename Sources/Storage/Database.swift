@@ -151,6 +151,13 @@ enum AppDatabase {
                 t.column("sourceId", .integer)
             }
         }
+        // v2: store the visible body text of crawled pages so the synthesis layer has
+        // business content (not just technical metadata) to reason over.
+        migrator.registerMigration("v2-pagetext") { db in
+            try db.alter(table: "crawl_page") { t in
+                t.add(column: "textContent", .text)
+            }
+        }
         return migrator
     }
 }

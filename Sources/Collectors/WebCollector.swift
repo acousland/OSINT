@@ -171,11 +171,16 @@ struct WebCollector: PassiveCollector {
         guard let htmlStr = String(data: data, encoding: .utf8) else { return .empty(urlStr) }
 
         var title: String?
+        var bodyText: String?
         var links: [String] = []
         var docs: [String] = []
         do {
             let doc = try SwiftSoup.parse(htmlStr, urlStr)
             title = try? doc.title()
+            // Visible text for the business corpus (cap to keep storage/token use sane).
+            if let text = try? doc.body()?.text() {
+                bodyText = String(text.prefix(8000))
+            }
             for el in try doc.select("a[href]") {
                 guard let abs = try? el.attr("abs:href"), !abs.isEmpty else { continue }
                 guard let linkURL = URL(string: abs), linkURL.host == domain else { continue }
@@ -193,7 +198,8 @@ struct WebCollector: PassiveCollector {
             ref: urlStr, collector: name, httpStatus: status, fetchedAt: Date())) {
             _ = try? await store.insert(CrawlPage(
                 id: nil, investigationId: investigationId, url: urlStr, title: title,
-                statusCode: status, contentType: contentType, fetchedAt: Date(), sourceId: src))
+                statusCode: status, contentType: contentType, fetchedAt: Date(), sourceId: src,
+                textContent: bodyText))
         }
         return PageOutcome(url: urlStr, isPage: true, links: links, documents: docs)
     }

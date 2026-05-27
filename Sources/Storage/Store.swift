@@ -141,14 +141,23 @@ actor Store {
     /// Collected text (pages + documents) used to build the RAG corpus, paired with
     /// the source id each chunk should attribute to.
     func corpusText(investigationId: Int64) throws -> [(sourceId: Int64, text: String)] {
-        try dbQueue.read { db in
+        let rows: [(Int64, String)] = try dbQueue.read { db in
             var out: [(Int64, String)] = []
+            let pages = try CrawlPage
+                .filter(Column("investigationId") == investigationId).fetchAll(db)
+            for p in pages {
+                if let t = p.textContent, !t.isEmpty {
+                    let header = p.title.map { "\($0)\n" } ?? ""
+                    out.append((p.sourceId, header + t))
+                }
+            }
             let docs = try HarvestedDocument
                 .filter(Column("investigationId") == investigationId).fetchAll(db)
             for d in docs where (d.extractedText?.isEmpty == false) {
                 out.append((d.sourceId, d.extractedText!))
             }
             return out
-        }.map { (sourceId: $0.0, text: $0.1) }
+        }
+        return rows.map { (sourceId: $0.0, text: $0.1) }
     }
 }
