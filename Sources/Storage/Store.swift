@@ -88,6 +88,13 @@ actor Store {
         }
     }
 
+    func pdfRenders(investigationId: Int64) throws -> [PdfRender] {
+        try dbQueue.read { db in
+            try PdfRender.filter(Column("investigationId") == investigationId)
+                .order(Column("url")).fetchAll(db)
+        }
+    }
+
     func subdomains(investigationId: Int64) throws -> [Subdomain] {
         try dbQueue.read { db in
             try Subdomain.filter(Column("investigationId") == investigationId)

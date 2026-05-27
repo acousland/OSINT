@@ -94,31 +94,92 @@ struct WebTab: View {
     @EnvironmentObject var state: AppState
     @State private var pages: [CrawlPage] = []
     @State private var docs: [HarvestedDocument] = []
+    @State private var pdfs: [PdfRender] = []
+    @State private var section: WebSection = .pdfs
+
+    enum WebSection: String, CaseIterable, Identifiable { case pages, pdfs, documents; var id: String { rawValue } }
 
     var body: some View {
-        VSplitView {
-            VStack(alignment: .leading) {
-                Text("Crawled Pages (\(pages.count))").font(.headline)
-                Table(pages) {
-                    TableColumn("Title") { Text($0.title ?? "—") }
-                    TableColumn("URL", value: \.url)
-                    TableColumn("Status") { Text($0.statusCode.map(String.init) ?? "—") }
+        VStack(spacing: 10) {
+            HStack {
+                Picker("", selection: $section) {
+                    Text("Pages (\(pages.count))").tag(WebSection.pages)
+                    Text("PDFs (\(pdfs.count))").tag(WebSection.pdfs)
+                    Text("Documents (\(docs.count))").tag(WebSection.documents)
+                }
+                .pickerStyle(.segmented).labelsHidden().fixedSize()
+                Spacer()
+                Button { openOutputFolder() } label: {
+                    Label("Open Output Folder", systemImage: "folder")
                 }
             }
-            VStack(alignment: .leading) {
-                Text("Harvested Documents (\(docs.count))").font(.headline)
-                Table(docs) {
-                    TableColumn("Type") { Text($0.type.uppercased()) }
-                    TableColumn("URL", value: \.url)
-                    TableColumn("Text length") { Text("\($0.extractedText?.count ?? 0)") }
-                }
+            switch section {
+            case .pages: pagesTable
+            case .pdfs: pdfsTable
+            case .documents: docsTable
             }
         }
-        .task {
-            guard let store = state.store, let id = investigation.id else { return }
-            pages = (try? await store.crawlPages(investigationId: id)) ?? []
-            docs = (try? await store.documents(investigationId: id)) ?? []
+        .padding()
+        .task { await load() }
+    }
+
+    private var pagesTable: some View {
+        Table(pages) {
+            TableColumn("Title") { Text($0.title ?? "—") }
+            TableColumn("URL", value: \.url)
+            TableColumn("Status") { Text($0.statusCode.map(String.init) ?? "—") }
         }
+    }
+
+    @ViewBuilder private var pdfsTable: some View {
+        if pdfs.isEmpty {
+            ContentUnavailableView("No rendered PDFs", systemImage: "doc.richtext",
+                description: Text("Enable “Render pages to PDF” on the Run tab, then run."))
+        } else {
+            Table(pdfs) {
+                TableColumn("Page URL", value: \.url)
+                TableColumn("Actions") { pdf in
+                    HStack {
+                        Button("Open") { FileAccess.open(pdf.localPath) }
+                        Button("Reveal") { FileAccess.reveal(pdf.localPath) }
+                    }
+                }
+                .width(160)
+            }
+        }
+    }
+
+    @ViewBuilder private var docsTable: some View {
+        if docs.isEmpty {
+            ContentUnavailableView("No harvested documents", systemImage: "doc",
+                description: Text("Enable “Harvest documents” on the Run tab, then run."))
+        } else {
+            Table(docs) {
+                TableColumn("Type") { Text($0.type.uppercased()) }.width(60)
+                TableColumn("URL", value: \.url)
+                TableColumn("Text") { Text("\($0.extractedText?.count ?? 0) chars") }.width(90)
+                TableColumn("Actions") { doc in
+                    HStack {
+                        Button("Open") { FileAccess.open(doc.localPath) }.disabled(doc.localPath == nil)
+                        Button("Reveal") { FileAccess.reveal(doc.localPath) }.disabled(doc.localPath == nil)
+                    }
+                }
+                .width(160)
+            }
+        }
+    }
+
+    private func openOutputFolder() {
+        guard let id = investigation.id,
+              let dir = try? AppDatabase.filesDirectory(investigationId: id) else { return }
+        FileAccess.openFolder(dir)
+    }
+
+    private func load() async {
+        guard let store = state.store, let id = investigation.id else { return }
+        pages = (try? await store.crawlPages(investigationId: id)) ?? []
+        docs = (try? await store.documents(investigationId: id)) ?? []
+        pdfs = (try? await store.pdfRenders(investigationId: id)) ?? []
     }
 }
 
