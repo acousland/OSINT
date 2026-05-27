@@ -1,0 +1,32 @@
+{
+  "_notice": "Curated starter ruleset in the Wappalyzer schema. To use the full dataset, replace this file's 'technologies' with the merged JSON from https://github.com/enthec/webappanalyzer (src/technologies/*.json). That dataset is GPL-3.0; bundling it makes the app subject to GPL-3.0 (accepted by the project owner). See THIRD_PARTY_NOTICES.md.",
+  "technologies": {
+    "Nginx": { "category": "Web server", "headers": { "Server": "nginx(?:/([0-9.]+))?" } },
+    "Apache": { "category": "Web server", "headers": { "Server": "Apache(?:/([0-9.]+))?" } },
+    "Microsoft IIS": { "category": "Web server", "headers": { "Server": "Microsoft-IIS(?:/([0-9.]+))?" } },
+    "LiteSpeed": { "category": "Web server", "headers": { "Server": "LiteSpeed" } },
+    "Cloudflare": { "category": "CDN", "headers": { "Server": "cloudflare", "CF-RAY": "" } },
+    "Amazon CloudFront": { "category": "CDN", "headers": { "Via": "CloudFront", "X-Amz-Cf-Id": "" } },
+    "Fastly": { "category": "CDN", "headers": { "X-Served-By": "cache", "Fastly-Debug-Digest": "" } },
+    "Varnish": { "category": "Caching", "headers": { "Via": "varnish", "X-Varnish": "" } },
+    "PHP": { "category": "Language", "headers": { "X-Powered-By": "PHP(?:/([0-9.]+))?" } },
+    "ASP.NET": { "category": "Framework", "headers": { "X-Powered-By": "ASP.NET", "X-AspNet-Version": "([0-9.]+)" } },
+    "Express": { "category": "Framework", "headers": { "X-Powered-By": "Express" } },
+    "WordPress": { "category": "CMS", "html": "wp-content|wp-includes", "headers": { "Link": "wp-json" } },
+    "Drupal": { "category": "CMS", "headers": { "X-Generator": "Drupal(?: ([0-9.]+))?" }, "html": "Drupal.settings" },
+    "Joomla": { "category": "CMS", "html": "/media/jui/|com_content" },
+    "Shopify": { "category": "Ecommerce", "headers": { "X-ShopId": "", "X-Shopify-Stage": "" }, "html": "cdn.shopify.com" },
+    "Magento": { "category": "Ecommerce", "html": "Mage.Cookies|/skin/frontend/" },
+    "React": { "category": "JS framework", "html": "data-reactroot|react.production.min.js" },
+    "Vue.js": { "category": "JS framework", "html": "data-v-[0-9a-f]{8}|vue.runtime" },
+    "Angular": { "category": "JS framework", "html": "ng-version=|ng-app" },
+    "Next.js": { "category": "Framework", "html": "/_next/static/", "headers": { "X-Powered-By": "Next.js" } },
+    "jQuery": { "category": "JS library", "html": "jquery(?:-([0-9.]+))?(?:\\.min)?\\.js" },
+    "Bootstrap": { "category": "UI framework", "html": "bootstrap(?:\\.min)?\\.css" },
+    "Google Analytics": { "category": "Analytics", "html": "google-analytics.com/analytics.js|gtag/js" },
+    "Google Tag Manager": { "category": "Tag manager", "html": "googletagmanager.com/gtm.js" },
+    "HubSpot": { "category": "Marketing", "html": "js.hs-scripts.com|hsforms.net" },
+    "Cloudflare Bot Management": { "category": "Security", "headers": { "Server": "cloudflare", "cf-mitigated": "" } },
+    "HSTS": { "category": "Security", "headers": { "Strict-Transport-Security": "" } }
+  }
+}
